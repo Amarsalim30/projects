@@ -5,6 +5,7 @@ import{createCustomer,fetchCustomers,deleteCustomer} from './sections/customers.
 import{createOrder,fetchOrders,deleteOrder,updateOrderStatus,fetchProducts
   ,updateOrderList,fetchOrdersByCustomerName,fetchOrdersByDate} from './sections/orders.js'
 import{fetchAndRenderProducts,deleteProduct} from './sections/products.js';
+import { initializeEventListeners } from './modules/eventlisteners.js';
 
 // Fetch orders and render them on the calendar
 async function fetchAndRenderOrders() {
@@ -33,44 +34,9 @@ async function fetchAndRenderOrders() {
   }
 }
 
-// Event delegation for delete buttons in the product list
-productListBody.addEventListener("click", (event) => {
-  if (event.target.classList.contains("delete-btn")) {
-    const productId = event.target.getAttribute("data-id");
-    deleteProduct(productId);
-  }
-});
-
-/* --------------- Event Listeners ----------------- */
-
-// Event delegation for delete buttons in the customer list
-customerListBody.addEventListener("click", (event) => {
-  if (event.target.classList.contains("delete-btn")) {
-    const customerId = event.target.getAttribute("data-id");
-    deleteCustomer(customerId);
-  }
-});
-
-// Event delegation for delete buttons in the order list
-document.querySelector("#order-list tbody").addEventListener("click", (event) => {
-  if (event.target.classList.contains("delete-btn")) {
-    const orderId = event.target.getAttribute("data-id");
-    deleteOrder(orderId);
-  }
-});
-
-// Event delegation for status update buttons in the order list
-document.querySelector("#order-list tbody").addEventListener("click", (event) => {
-  if (event.target.classList.contains("status-btn")) {
-    const orderId = event.target.getAttribute("data-id");
-    const newStatus = event.target.getAttribute("data-status");
-    updateOrderStatus(orderId, newStatus);
-  }
-});
-
-
 // Initialize plugins and event listeners after DOM is loaded
 document.addEventListener("DOMContentLoaded", function () {
+  initializeEventListeners(); 
   const phoneInput = document.getElementById('phone-number');
   
   if (phoneInput) {
@@ -196,12 +162,6 @@ document.addEventListener("DOMContentLoaded", function () {
       });
   }, 300));
 
-  // Use event delegation for dynamically added "Remove" buttons
-  productSelection.addEventListener("click", function (event) {
-    if (event.target.matches(".remove-product")) {
-      event.target.closest(".product-entry").remove();
-    }
-  });
 
   // Initialize FullCalendar with new options
   $("#calendar").fullCalendar({
@@ -420,40 +380,6 @@ window.addEventListener("resize", debounce(function() {
   document.getElementById("close-add-product-sidebar").addEventListener("click", function () {
     document.getElementById("add-product-sidebar").classList.remove("active");
   });
-
-  // Form submission for adding a product
-  document.getElementById("add-product-form").addEventListener("submit", async function (event) {
-    event.preventDefault();
-    const form = event.target;
-    const formData = new FormData(form);
-    const newProduct = {
-      name: formData.get("name"),
-      stock: formData.get("availability"),
-      price: formData.get("price") // Add price field
-    };
-
-    try {
-      const response = await fetch(`${productBaseUrl}/new`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newProduct),
-      });
-
-      if (!response.ok) throw new Error("Failed to add product");
-
-      // Reset form and update UI
-      form.reset();
-      hideSidebars();
-      await fetchProducts();
-    } catch (error) {
-      console.error("Add product error:", error);
-      alert("Error adding product: " + error.message);
-    }
-  });
-
-  // Form submissions
-  document.querySelector("#add-customer-form").addEventListener("submit", createCustomer);
-  document.getElementById("add-order-form").addEventListener("submit", createOrder);
 
   let searchCustomerController; // Declare a controller for customer search requests
   const searchCache = new Map(); // Cache for previous search results
