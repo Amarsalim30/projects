@@ -1,278 +1,10 @@
-/* --------------- Constants ----------------- */
-const customerBaseUrl = "/api/customers";
-const productBaseUrl = "/api/products";
-const orderBaseUrl = "/api/orders";
-
-/* --------------- DOM Caching ----------------- */
-const customerListBody = document.querySelector("#customer-list tbody");
-const productSelection = document.getElementById("product-selection");
-const orderListBody = document.querySelector("#order-list tbody");
-const productListBody = document.querySelector("#product-list tbody");
-
-/* --------------- Utility Functions ----------------- */
-
-// Debounce utility to limit rapid function calls
-function debounce(func, delay) {
-  let debounceTimer;
-  return function (...args) {
-    clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(() => func.apply(this, args), delay);
-  };
-}
-
-// Throttle function to limit the rate of function calls
-function throttle(func, limit) {
-  let lastFunc;
-  let lastRan;
-  return function (...args) {
-    const context = this;
-    if (!lastRan) {
-      func.apply(context, args);
-      lastRan = Date.now();
-    } else {
-      clearTimeout(lastFunc);
-      lastFunc = setTimeout(function () {
-        if (Date.now() - lastRan >= limit) {
-          func.apply(context, args);
-          lastRan = Date.now();
-        }
-      }, limit - (Date.now() - lastRan));
-    }
-  };
-}
-
-// UI Helper: Hide all sidebars
-function hideSidebars() {
-  document.querySelectorAll(".sidebar").forEach((sidebar) => {
-    sidebar.classList.remove("active");
-  });
-}
-
-/* --------------- Customer Section ----------------- */
-
-// Modified createCustomer function with proper validation and error handling
-async function createCustomer(event) {
-  event.preventDefault();
-  const form = document.querySelector("#add-customer-form");
-  const phoneInput = document.getElementById('phone-number');
-  
-  // Validate phone number before submission
-  const cleanedNumber = phoneInput.value.replace(/\D/g, '');
-  if (cleanedNumber.length !== 12 || !cleanedNumber.startsWith('254')) {
-    phoneInput.setCustomValidity('Please enter a valid Kenyan number (254XXXXXXXXX)');
-    phoneInput.reportValidity();
-    return;
-  }
-
-  const formData = new FormData(form);
-  const newCustomer = {
-    name: formData.get("name"),
-    number: cleanedNumber, // Store the cleaned number
-    // Include other fields as needed
-  };
-
-  try {
-    const response = await fetch(`${customerBaseUrl}/new`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(newCustomer),
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || "Failed to create customer");
-    }
-    
-    // Reset form and update UI
-    form.reset();
-    hideSidebars();
-    await fetchCustomers();
-    
-  } catch (error) {
-    if (error.name === 'TypeError') {
-      console.error("Network error:", error);
-      alert("Network error: Please check your internet connection.");
-    } else {
-      console.error("Create customer error:", error);
-      alert("Error creating customer: " + error.message);
-    }
-  }
-}
-
-let customerFetchController; // Declare a controller for customer fetch requests
-
-// Fetch customers without pagination
-async function fetchCustomers(url = customerBaseUrl) {
-  if (customerFetchController && !customerFetchController.signal.aborted) {
-    customerFetchController.abort(); // Abort the previous request if it exists and not already aborted
-  }
-  customerFetchController = new AbortController(); // Create a new controller
-  const signal = customerFetchController.signal;
-
-  try {
-    const response = await fetch(url, { signal });
-    if (!response.ok) throw new Error("Failed to fetch customers");
-    const customers = await response.json();
-
-    customerListBody.innerHTML = ""; // Clear current list
-
-    // Render customer rows
-    customers.forEach((customer) => {
-      const row = document.createElement("tr");
-      row.innerHTML = `
-        <td>${customer.name}</td>
-        <td>${customer.number}</td>
-        <td>${customer.orderCount || 0}</td>
-        <td><button class="delete-btn" data-id="${customer.id}">Delete</button></td>
-      `;
-      customerListBody.appendChild(row);
-    });
-  } catch (error) {
-    if (error.name !== 'AbortError') {
-      console.error(error);
-      alert("Error fetching customersUI",error);
-    }
-  }
-}
-
-// Delete customer
-async function deleteCustomer(customerId) {
-  try {
-    const response = await fetch(
-      `${customerBaseUrl}/${encodeURIComponent(customerId)}`,
-      { method: "DELETE" }
-    );
-    if (!response.ok) throw new Error("Failed to delete customer");
-    fetchCustomers();
-  } catch (error) {
-    console.error(error);
-    alert("Error deleting customer");
-  }
-}
-
-/* --------------- Order Section ----------------- */
-
-async function createOrder(event) {
-  event.preventDefault();
-  const form = document.querySelector("#add-order-form");
-  const formData = new FormData(form);
-  const newOrder = {
-    customerId: formData.get("select-customer"),
-    dateOfEvent: formData.get("date-of-event"),
-    status: formData.get("status"),
-    products: [], // Populate with product details
-  };
-
-  // Collect product details
-  document.querySelectorAll(".product-entry").forEach((entry) => {
-    newOrder.products.push({
-      productId: entry.querySelector(".product-select").value,
-      quantity: entry.querySelector(".product-quantity").value,
-      price: entry.querySelector(".product-price").value,
-    });
-  });
-
-  try {
-    const response = await fetch(`${orderBaseUrl}/new`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(newOrder),
-    });
-
-    if (!response.ok) throw new Error("Failed to create order");
-
-    // Reset form and update UI
-    form.reset();
-    productSelection.innerHTML = ''; // Removes all product entries
-    hideSidebars();
-    await fetchOrders();
-  } catch (error) {
-    console.error("Create order error:", error);
-    alert("Error creating order: " + error.message);
-  }
-}
-
-async function fetchOrders(url = orderBaseUrl) {
-  try {
-    const response = await fetch(url);
-    if (!response.ok) throw new Error("Failed to fetch orders");
-    const orders = await response.json();
-    const orderListBody = document.querySelector("#order-list tbody");
-    orderListBody.innerHTML = ""; // Clear current list
-
-    orders.forEach((order) => {
-      const row = document.createElement("tr");
-      row.innerHTML = `
-        <td>${order.customerName}</td>
-        <td>${order.customerNumber}</td>
-        <td>${order.status}</td>
-        <td>${order.date}</td>
-        <td>${order.products.map(p => p.name).join(", ")}</td>
-        <td>${order.totalAmount}</td>
-        <td>${order.paidAmount}</td>
-        <td>${order.remainingAmount}</td>
-        <td><button class="delete-btn" data-id="${order.id}">Delete</button></td>
-      `;
-      orderListBody.appendChild(row);
-    });
-  } catch (error) {
-    console.error("Error fetching orders:", error);
-    alert("Error fetching orders");
-  }
-}
-
-async function deleteOrder(orderId) {
-  try {
-    const response = await fetch(
-      `${orderBaseUrl}/${encodeURIComponent(orderId)}`,
-      { method: "DELETE" }
-    );
-    if (!response.ok) throw new Error("Failed to delete order");
-    fetchOrders();
-  } catch (error) {
-    console.error(error);
-    alert("Error deleting order");
-  }
-}
-
-// Update order status
-async function updateOrderStatus(orderId, newStatus) {
-  try {
-    const response = await fetch(`${orderBaseUrl}/${encodeURIComponent(orderId)}/status`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: newStatus }),
-    });
-    if (!response.ok) throw new Error("Failed to update order status");
-    fetchOrders();
-  } catch (error) {
-    console.error(error);
-    alert("Error updating order status");
-  }
-}
-
-// Fetch products and populate the product selection dropdown with error handling
-async function fetchProducts() {
-  try {
-    const response = await fetch(productBaseUrl);
-    if (!response.ok) throw new Error("Failed to fetch products");
-    const products = await response.json();
-    const productSelectElements = document.querySelectorAll(".product-select");
-
-    productSelectElements.forEach(select => {
-      select.innerHTML = ""; // Clear existing options
-      products.forEach(product => {
-        const option = document.createElement("option");
-        option.value = product.id;
-        option.textContent = product.name;
-        select.appendChild(option);
-      });
-    });
-  } catch (error) {
-    console.error("Error fetching products:", error);
-    alert("Error fetching products");
-  }
-}
+import{customerListBody,productSelection,orderListBody,productListBody} from './modules/domCaching.js';
+import{customerBaseUrl,productBaseUrl,orderBaseUrl} from './modules/constants.js';
+import{hideSidebars,throttle,debounce} from './modules/utility.js';
+import{createCustomer,fetchCustomers,deleteCustomer} from './sections/customers.js'
+import{createOrder,fetchOrders,deleteOrder,updateOrderStatus,fetchProducts
+  ,updateOrderList,fetchOrdersByCustomerName,fetchOrdersByDate} from './sections/orders.js'
+import{fetchAndRenderProducts,deleteProduct} from './sections/products.js';
 
 // Fetch orders and render them on the calendar
 async function fetchAndRenderOrders() {
@@ -298,47 +30,6 @@ async function fetchAndRenderOrders() {
   } catch (error) {
     console.error("Error fetching orders:", error);
     alert("Error fetching orders");
-  }
-}
-
-// Fetch products and update the product list UI
-async function fetchAndRenderProducts() {
-  try {
-    const response = await fetch(productBaseUrl);
-    if (!response.ok) throw new Error("Failed to fetch products");
-    const products = await response.json();
-
-    productListBody.innerHTML = ""; // Clear current list
-
-    // Render product rows
-    products.forEach((product) => {
-      const row = document.createElement("tr");
-      row.innerHTML = `
-        <td>${product.name}</td>
-        <td>${product.stock}</td>
-        <td>${product.price}</td>
-        <td><button class="delete-btn" data-id="${product.id}">Delete</button></td>
-      `;
-      productListBody.appendChild(row);
-    });
-  } catch (error) {
-    console.error("Error fetching products:", error);
-    alert("Error fetching products");
-  }
-}
-
-// Delete product
-async function deleteProduct(productId) {
-  try {
-    const response = await fetch(
-      `${productBaseUrl}/${encodeURIComponent(productId)}`,
-      { method: "DELETE" }
-    );
-    if (!response.ok) throw new Error("Failed to delete product");
-    fetchAndRenderProducts();
-  } catch (error) {
-    console.error(error);
-    alert("Error deleting product");
   }
 }
 
@@ -377,52 +68,6 @@ document.querySelector("#order-list tbody").addEventListener("click", (event) =>
   }
 });
 
-// Fetch orders by customer name
-async function fetchOrdersByCustomerName(name) {
-  try {
-    const response = await fetch(`${orderBaseUrl}/name/${encodeURIComponent(name)}`);
-    if (!response.ok) throw new Error("Failed to fetch orders by customer name");
-    const orders = await response.json();
-    updateOrderList(orders);
-  } catch (error) {
-    console.error("Error fetching orders by customer name:", error);
-    alert("Error fetching orders by customer name");
-  }
-}
-
-// Fetch orders by date
-async function fetchOrdersByDate(date) {
-  try {
-    const response = await fetch(`${orderBaseUrl}/date/${encodeURIComponent(date)}`);
-    if (!response.ok) throw new Error("Failed to fetch orders by date");
-    const orders = await response.json();
-    updateOrderList(orders);
-  } catch (error) {
-    console.error("Error fetching orders by date:", error);
-    alert("Error fetching orders by date");
-  }
-}
-
-// Update order list UI
-function updateOrderList(orders) {
-  orderListBody.innerHTML = ""; // Clear current list
-
-  orders.forEach((order) => {
-    const row = document.createElement("tr");
-    row.innerHTML = `
-      <td>${order.customerName}</td>
-      <td>${order.customerNumber}</td>
-      <td>${order.status}</td>
-      <td>${order.date}</td>
-      <td>${order.products.map(p => p.name).join(", ")}</td>
-      <td>${order.totalAmount}</td>
-      <td>${order.paidAmount}</td>
-      <td>${order.remainingAmount}</td>
-      <td><button class="delete-btn" data-id="${order.id}">Delete</button></td>
-    `;
-    orderListBody.appendChild(row);
-  });
-}
 
 // Initialize plugins and event listeners after DOM is loaded
 document.addEventListener("DOMContentLoaded", function () {
@@ -558,41 +203,6 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
-  // Initialize FullCalendar
-  $("#calendar").fullCalendar({
-    header: {
-      left: "prev,next today",
-      center: "title",
-      right: "month,agendaWeek,agendaDay",
-    },
-    editable: true,
-    events: [], // Initially empty, will be populated by fetchAndRenderOrders
-    eventRender: function (event, element) {
-      if (event.extendedProps.status) {
-        element.css(
-          "background-color",
-          event.extendedProps.status === "pending"
-            ? "#f39c12"
-            : event.extendedProps.status === "completed"
-            ? "#00a65a"
-            : "#d9534f"
-        );
-      }
-      element.qtip({
-        content: `
-          <strong>Customer Number:</strong> ${event.extendedProps.customerNumber}<br>
-          <strong>Products:</strong> ${event.extendedProps.products}<br>
-          <strong>Total Amount:</strong> ${event.extendedProps.totalAmount}<br>
-          <strong>Paid Amount:</strong> ${event.extendedProps.paidAmount}<br>
-          <strong>Remaining Amount:</strong> ${event.extendedProps.remainingAmount}
-        `,
-        style: {
-          classes: 'qtip-bootstrap'
-        }
-      });
-    }
-  });
-
   // Initialize FullCalendar with new options
   $("#calendar").fullCalendar({
     header: {
@@ -669,6 +279,125 @@ window.addEventListener("resize", debounce(function() {
 
   // Fetch and render orders on the calendar
   fetchAndRenderOrders();
+
+  const monthYearElement = document.getElementById('month-year');
+  const calendarDaysElement = document.getElementById('calendar-days');
+  const prevMonthButton = document.getElementById('prev-month');
+  const nextMonthButton = document.getElementById('next-month');
+  const selectedDateElement = document.getElementById('selected-date');
+  const eventItemsElement = document.getElementById('event-items');
+
+  let currentDate = new Date();
+  let selectedDate = null;
+
+  const events = {
+    "2024-01-15": [{ time: "10:00", title: "Meeting with John", description: "Discuss project updates" },
+                  { time: "14:00", title: "Project Deadline", description: "Submit final report" }],
+    "2024-01-22": [{ time: "12:30", title: "Team Lunch", description: "Celebrate project milestone" }],
+    "2024-02-10": [{ time: "19:00", title: "Client Dinner", description: "Formal dinner with key client" }]
+  };
+
+  function renderCalendar() {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const firstDayOfMonth = new Date(year, month, 1);
+    const lastDayOfMonth = new Date(year, month + 1, 0);
+    const daysInMonth = lastDayOfMonth.getDate();
+    const startingDay = firstDayOfMonth.getDay();
+
+    monthYearElement.textContent = new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(currentDate);
+    calendarDaysElement.innerHTML = '';
+
+    for (let i = 0; i < startingDay; i++) {
+      const dayElement = document.createElement('div');
+      dayElement.classList.add('calendar-day', 'inactive');
+      calendarDaysElement.appendChild(dayElement);
+    }
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dayElement = document.createElement('div');
+      dayElement.classList.add('calendar-day');
+      dayElement.textContent = day;
+
+      const fullDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+      if (year === new Date().getFullYear() && month === new Date().getMonth() && day === new Date().getDate()) {
+        dayElement.classList.add('today');
+      }
+
+      if (selectedDate && fullDate === `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`) {
+        dayElement.classList.add('selected');
+      }
+
+      if (events[fullDate]) {
+        const eventIndicator = document.createElement('span');
+        eventIndicator.classList.add('event-indicator');
+        dayElement.appendChild(eventIndicator);
+      }
+
+      dayElement.addEventListener('click', () => {
+        selectedDate = new Date(year, month, day);
+        renderCalendar();
+        displayEvents(fullDate);
+      });
+
+      calendarDaysElement.appendChild(dayElement);
+    }
+  }
+
+  function displayEvents(dateString) {
+    selectedDateElement.textContent = new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'long', day: 'numeric' }).format(new Date(dateString));
+
+    eventItemsElement.innerHTML = '';
+
+    if (events[dateString]) {
+      events[dateString].forEach(event => {
+        const listItem = document.createElement('li');
+        listItem.innerHTML = `
+          <span class="event-time">${event.time}</span>
+          <span class="event-title">${event.title}</span>
+          <div class="event-actions">
+            <button class="edit">Edit</button>
+            <button class="delete">Delete</button>
+          </div>
+        `;
+        eventItemsElement.appendChild(listItem);
+
+        const deleteButton = listItem.querySelector('.delete');
+        deleteButton.addEventListener('click', () => {
+          const index = events[dateString].indexOf(event);
+          if (index > -1) {
+            events[dateString].splice(index, 1);
+          }
+          displayEvents(dateString);
+        });
+
+        const editButton = listItem.querySelector('.edit');
+        editButton.addEventListener('click', () => {
+          console.log('Edit event:', event);
+        });
+      });
+    } else {
+      const listItem = document.createElement('li');
+      listItem.textContent = "No events for this day.";
+      eventItemsElement.appendChild(listItem);
+    }
+  }
+
+  prevMonthButton.addEventListener('click', () => {
+    currentDate.setMonth(currentDate.getMonth() - 1);
+    renderCalendar();
+  });
+
+  nextMonthButton.addEventListener('click', () => {
+    currentDate.setMonth(currentDate.getMonth() + 1);
+    renderCalendar();
+  });
+
+  renderCalendar();
+
+  const todayString = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}`;
+  displayEvents(todayString);
 
   // Sidebar toggle for "Add Customer" and "Add Order"
   document.getElementById("open-add-customer-sidebar").addEventListener("click", function () {
