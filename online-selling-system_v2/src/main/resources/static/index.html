@@ -60,31 +60,31 @@
         </form>
       </div>
 
-<!-- Collapsible Button -->
-<button type="button" class="collapsible">Customer List</button>
+      <!-- Collapsible Button -->
+      <button type="button" class="collapsible">Customer List</button>
 
-<!-- Collapsible Content -->
-<div class="content">
-  <!-- Pagination Controls -->
-  <div id="pagination-controls">
-    <!-- Pagination buttons will be dynamically inserted here -->
-  </div>
+      <!-- Collapsible Content -->
+      <div class="content">
+        <!-- Pagination Controls -->
+        <div id="pagination-controls">
+          <!-- Pagination buttons will be dynamically inserted here -->
+        </div>
 
-  <!-- Customer Table -->
-  <table id="customer-list">
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Number</th>
-        <th>Order Count</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      <!-- Customer entries will be populated here -->
-    </tbody>
-  </table>
-</div>
+        <!-- Customer Table -->
+        <table id="customer-list">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Number</th>
+              <th>Order Count</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Customer entries will be populated here -->
+          </tbody>
+        </table>
+      </div>
     </section> <!-- Close the customer-management section -->
 
     <!-- Order Management Section -->
@@ -146,7 +146,33 @@
     <!-- Scheduling Management Section -->
     <section id="scheduling-management">
       <h2>Scheduling Management</h2>
-      <div id="calendar"></div>
+      <div class="calendar-container">
+        <div class="calendar-header">
+          <div class="calendar-navigation">
+            <button id="prev-month" aria-label="Previous Month"><</button>
+          </div>
+          <h2 id="month-year"></h2>
+          <div class="calendar-navigation">
+            <button id="next-month" aria-label="Next Month">></button>
+          </div>
+        </div>
+        <div class="calendar-weekdays">
+          <div>Sun</div>
+          <div>Mon</div>
+          <div>Tue</div>
+          <div>Wed</div>
+          <div>Thu</div>
+          <div>Fri</div>
+          <div>Sat</div>
+        </div>
+        <div class="calendar-days" id="calendar-days"></div>
+      </div>
+      <div class="event-list">
+        <h3>Events for <span id="selected-date"></span></h3>
+        <ul id="event-items">
+          <li>No events for this day.</li>
+        </ul>
+      </div>
     </section>
 
     <!-- Product List Section -->
