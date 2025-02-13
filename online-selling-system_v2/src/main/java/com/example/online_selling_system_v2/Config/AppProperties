@@ -1,0 +1,27 @@
+// package com.example.online_selling_system_v2.config;
+
+// import org.springframework.boot.context.properties.ConfigurationProperties;
+// import org.springframework.context.annotation.Configuration;
+
+// @Configuration
+// @ConfigurationProperties(prefix = "app")
+// public class AppProperties {
+//     private String uploadDir;
+//     private String uploadBaseUrl;
+
+//     public String getUploadDir() {
+//         return uploadDir;
+//     }
+
+//     public void setUploadDir(String uploadDir) {
+//         this.uploadDir = uploadDir;
+//     }
+
+//     public String getUploadBaseUrl() {
+//         return uploadBaseUrl;
+//     }
+
+//     public void setUploadBaseUrl(String uploadBaseUrl) {
+//         this.uploadBaseUrl = uploadBaseUrl;
+//     }
+// }

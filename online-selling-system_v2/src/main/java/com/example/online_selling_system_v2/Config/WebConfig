@@ -1,0 +1,19 @@
+// @Configuration
+// public class WebConfig implements WebMvcConfigurer {
+
+//     private final AppProperties appProperties;
+
+//     public WebConfig(AppProperties appProperties) {
+//         this.appProperties = appProperties;
+//     }
+
+//     @Override
+//     public void addResourceHandlers(ResourceHandlerRegistry registry) {
+//         String uploadDir = appProperties.getUploadDir();
+//         if (!uploadDir.endsWith("/")) {
+//             uploadDir += "/";
+//         }
+//         registry.addResourceHandler("/uploads/**")
+//                 .addResourceLocations("file:" + uploadDir);
+//     }
+// }

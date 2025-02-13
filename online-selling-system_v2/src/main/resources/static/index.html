@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Business Management App</title>
+  <!-- External Stylesheets -->
+  <link rel="stylesheet" href="styles.css" />
+  <!-- Font Awesome for icons -->
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+  />
+  <!-- Select2 CSS -->
+  <link
+    href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css"
+    rel="stylesheet"
+  />
+  <!-- FullCalendar CSS -->
+  <link
+    href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.2/fullcalendar.min.css"
+    rel="stylesheet"
+  />
+</head>
+<body>
+  <!-- Navigation Bar -->
+  <nav class="navbar" id="myTopnav">
+    <a href="#customer-management" class="active">Customer Management</a>
+    <a href="#order-management">Order Management</a>
+    <a href="#scheduling-management">Scheduling Management</a>
+    <a href="#product-list">Product List</a>
+    <a href="javascript:void(0);" class="icon">
+      <i class="fa fa-bars"></i>
+    </a>
+  </nav>
+
+  <!-- Loading Spinner -->
+  <div id="loading-spinner" style="display: none;">
+    <img src="spinner.gif" alt="Loading..." />
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <!-- Customer Management Section -->
+    <section id="customer-management">
+      <h2>Customer Management</h2>
+      <input type="text" id="search-customer" placeholder="Search by name or number" />
+      <!-- Button to open the sidebar -->
+      <button id="open-add-customer-sidebar" class="btn-primary">Add Customer</button>
+
+      <!-- Sidebar for adding a customer -->
+      <div id="add-customer-sidebar" class="sidebar">
+        <!-- Close button -->
+        <a href="javascript:void(0)" class="closebtn" id="close-add-customer-sidebar">&times;</a>
+        <form id="add-customer-form" action="/api/customers/new" method="post">
+          <input type="file" id="browse-contact" name="contactImage" accept="image/*" />
+          <input type="text" id="customer-name" name="name" placeholder="Name" required />
+          <input type="tel" id="phone-number" name="number" placeholder="254 XXX XXX XXX" pattern="^254\s?\d{3}\s?\d{3}\s?\d{3}$" required>
+          <button type="submit" class="btn-primary">Add Customer</button>
+        </form>
+      </div>
+
+<!-- Collapsible Button -->
+<button type="button" class="collapsible">Customer List</button>
+
+<!-- Collapsible Content -->
+<div class="content">
+  <!-- Pagination Controls -->
+  <div id="pagination-controls">
+    <!-- Pagination buttons will be dynamically inserted here -->
+  </div>
+
+  <!-- Customer Table -->
+  <table id="customer-list">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Number</th>
+        <th>Order Count</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Customer entries will be populated here -->
+    </tbody>
+  </table>
+</div>
+    </section> <!-- Close the customer-management section -->
+
+    <!-- Order Management Section -->
+    <section id="order-management">
+      <h2>Order Management</h2>
+      <input type="text" id="search-order" placeholder="Search by customer name or date" />
+      <!-- Button to open the sidebar -->
+      <button id="open-add-order-sidebar" class="btn-primary">Add Order</button>
+
+      <!-- Sidebar for adding an order -->
+      <div id="add-order-sidebar" class="sidebar">
+        <!-- Close button -->
+        <a href="javascript:void(0)" class="closebtn" id="close-add-order-sidebar">&times;</a>
+        <form id="add-order-form">
+          <select id="select-customer" required>
+            <!-- Customer options will be populated here -->
+          </select>
+          <div id="product-selection">
+            <!-- Product selection fields will be added here -->
+          </div>
+          <!-- Date of Event Field -->
+          <label for="date-of-event">Date of Event:</label>
+          <input type="date" id="date-of-event" name="date-of-event" required />
+          <button type="button" id="add-product" class="btn-secondary">Add Product</button>
+          <label for="order-status">Order Status:</label>
+          <select id="order-status" name="status" required>
+            <option value="pending">Pending</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+          <button type="submit" class="btn-primary">Add Order</button>
+        </form>
+      </div>
+
+      <!-- Existing Order List -->
+      <button class="collapsible">Order List</button>
+      <div class="content">
+        <table id="order-list">
+          <thead>
+            <tr>
+              <th>Customer Name</th>
+              <th>Customer Number</th>
+              <th>Status</th>
+              <th>Date</th>
+              <th>Products</th>
+              <th>Total Amount</th>
+              <th>Paid Amount</th>
+              <th>Remaining Amount</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Order entries will be populated here -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Scheduling Management Section -->
+    <section id="scheduling-management">
+      <h2>Scheduling Management</h2>
+      <div id="calendar"></div>
+    </section>
+
+    <!-- Product List Section -->
+    <section id="product-list">
+      <h2>Product List</h2>
+      <button id="open-add-product-sidebar" class="btn-primary">Add Product</button>
+      <table>
+        <thead>
+          <tr>
+            <th>Product Name</th>
+            <th>Availability</th>
+            <th>Price</th> <!-- Add Price column -->
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Product entries will be populated here -->
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Sidebar for adding a product -->
+    <div id="add-product-sidebar" class="sidebar">
+      <!-- Close button -->
+      <a href="javascript:void(0)" class="closebtn" id="close-add-product-sidebar">&times;</a>
+      <form id="add-product-form">
+        <input type="text" id="product-name" name="name" placeholder="Product Name" required />
+        <input type="number" id="product-availability" name="availability" placeholder="Availability" required />
+        <input type="number" id="product-price" name="price" placeholder="Price" required />
+        <button type="submit" class="btn-primary">Add Product</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- External Scripts -->
+  <!-- jQuery -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <!-- Select2 JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+  <!-- Moment.js (for FullCalendar) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+  <!-- FullCalendar JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.2/fullcalendar.min.js"></script>
+  <!-- Our App JS -->
+  <script src="app.js"></script>
+</body>
+</html>
