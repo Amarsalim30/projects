@@ -1,12 +1,12 @@
 import{customerListBody,productSelection,orderListBody,productListBody} from './modules/domCaching.js';
 import{customerBaseUrl,productBaseUrl,orderBaseUrl} from './modules/constants.js';
-import{hideSidebars,throttle,debounce} from './modules/utility.js';
+import{hideSidebars,throttle,debounce,showLoadingSpinner,hideLoadingSpinner} from './modules/utility.js';
 import{createCustomer,fetchCustomers,deleteCustomer} from './sections/customers.js'
 import{createOrder,fetchOrders,deleteOrder,updateOrderStatus,fetchProducts
   ,updateOrderList,fetchOrdersByCustomerName,fetchOrdersByDate} from './sections/orders.js'
 import{fetchAndRenderProducts,deleteProduct} from './sections/products.js';
 import { initializeEventListeners } from './modules/eventlisteners.js';
-
+import {initializeAddProductToOrder} from './modules/select.js';
 // Fetch orders and render them on the calendar
 async function fetchAndRenderOrders() {
   try {
@@ -37,6 +37,7 @@ async function fetchAndRenderOrders() {
 // Initialize plugins and event listeners after DOM is loaded
 document.addEventListener("DOMContentLoaded", function () {
   initializeEventListeners(); 
+  initializeAddProductToOrder(productBaseUrl, debounce);
   const phoneInput = document.getElementById('phone-number');
   
   if (phoneInput) {
@@ -107,61 +108,6 @@ document.addEventListener("DOMContentLoaded", function () {
     },
     minimumInputLength: 1,
   });
-
-  // Add product selection fields dynamically
-  document.getElementById("add-product").addEventListener("click", debounce(() => {
-    const productDiv = document.createElement("div");
-    productDiv.classList.add("product-entry");
-    productDiv.innerHTML = `
-      <select class="product-select" required>
-        <!-- Product options will be populated here -->
-      </select>
-      <input type="number" class="product-quantity" placeholder="Quantity" required>
-      <input type="number" class="product-price" placeholder="Price" required>
-      <button type="button" class="remove-product">Remove</button>
-    `;
-    productSelection.appendChild(productDiv);
-    $(productDiv)
-      .find(".product-select")
-      .select2({
-        placeholder: "Select a product",
-        allowClear: true,
-        minimumInputLength: 1,
-        ajax: {
-          url: `${productBaseUrl}`,
-          dataType: 'json',
-          delay: 250,
-          data: function (params) {
-            return {
-              searchTerm: params.term
-            };
-          },
-          processResults: function (data) {
-            return {
-
-              results: data.map(product => ({
-                id: product.id,
-                text: product.name || `Product ${product.id}` // Fallback to generic name
-              }))
-            };
-          },
-          cache: true
-        }
-      }).on('select2:select', async function (e) {
-        const productId = e.params.data.id;
-        try {
-          const response = await fetch(`${productBaseUrl}/${productId}`);
-          const product = await response.json();
-          const entry = e.target.closest('.product-entry');
-          if (entry && product.price) {
-            entry.querySelector('.product-price').value = product.price;
-          }
-        } catch (error) {
-          console.error("Error fetching product:", error);
-        }
-      });
-  }, 300));
-
 
   // Initialize FullCalendar with new options
   $("#calendar").fullCalendar({
@@ -383,22 +329,6 @@ window.addEventListener("resize", debounce(function() {
 
   let searchCustomerController; // Declare a controller for customer search requests
   const searchCache = new Map(); // Cache for previous search results
-
-  // Show loading spinner
-  function showLoadingSpinner() {
-    const spinner = document.getElementById("loading-spinner");
-    if (spinner) {
-      spinner.style.display = "block";
-    }
-  }
-
-  // Hide loading spinner
-  function hideLoadingSpinner() {
-    const spinner = document.getElementById("loading-spinner");
-    if (spinner) {
-      spinner.style.display = "none";
-    }
-  }
 
   // Debounced and throttled search for customers
   const searchCustomerInput = document.querySelector("#search-customer");

@@ -37,4 +37,19 @@ function hideSidebars() {
     });
   }
   
-export{hideSidebars,throttle,debounce};
+    // Show loading spinner
+    function showLoadingSpinner() {
+      const spinner = document.getElementById("loading-spinner");
+      if (spinner) {
+        spinner.style.display = "block";
+      }
+    }
+  
+    // Hide loading spinner
+    function hideLoadingSpinner() {
+      const spinner = document.getElementById("loading-spinner");
+      if (spinner) {
+        spinner.style.display = "none";
+      }
+    }
+export{hideSidebars,throttle,debounce,showLoadingSpinner,hideLoadingSpinner};
