@@ -104,5 +104,21 @@ async function deleteCustomer(customerId) {
       alert("Error deleting customer");
     }
   }
+    // Update customer list UI
+function updateCustomerList(customers) {
+      customerListBody.innerHTML = ""; // Clear current list
   
-  export{createCustomer,fetchCustomers,deleteCustomer};
+      // Render customer rows
+      customers.forEach((customer) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${customer.name}</td>
+          <td>${customer.number}</td>
+          <td>${customer.orderCount || 0}</td>
+          <td><button class="delete-btn" data-id="${customer.id}">Delete</button></td>
+        `;
+        customerListBody.appendChild(row);
+      });
+    }
+  
+  export{createCustomer,fetchCustomers,deleteCustomer,updateCustomerList};

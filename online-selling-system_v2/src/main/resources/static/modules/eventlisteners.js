@@ -4,7 +4,31 @@ import { deleteOrder, updateOrderStatus ,createOrder} from '../sections/orders.j
 import { deleteProduct } from '../sections/products.js';
 
 
-  document.getElementById("add-order-form").addEventListener("submit", createOrder);
+const initializeCustomerSidebarToggle = () => {
+    document.getElementById("open-add-customer-sidebar").addEventListener("click", function () {
+        document.getElementById("add-customer-sidebar").classList.add("active");
+    }); 
+    document.getElementById("close-add-customer-sidebar").addEventListener("click", function () {
+        document.getElementById("add-customer-sidebar").classList.remove("active");
+    });
+    }
+const initializeOrderSidebarToggle = () => {
+    document.getElementById("open-add-order-sidebar").addEventListener("click", function () {
+        document.getElementById("add-order-sidebar").classList.add("active");
+    });
+    document.getElementById("close-add-order-sidebar").addEventListener("click", function () {
+        document.getElementById("add-order-sidebar").classList.remove("active");
+    });
+    }
+const initializeProductSidebarToggle = () => {
+    document.getElementById("open-add-product-sidebar").addEventListener("click", function () {
+        document.getElementById("add-product-sidebar").classList.add("active");
+    });
+    document.getElementById("close-add-product-sidebar").addEventListener("click", function () {
+        document.getElementById("add-product-sidebar").classList.remove("active");
+    });
+    }
+    
 
 const initializeProductFormListener = (fetchProducts) => {  
     document.getElementById("add-product-form").addEventListener("submit", async function (event) {
@@ -42,7 +66,6 @@ const initializeCustomerFormListener = (createCustomer) => {
 const initializeOrderFormListener = (createOrder) => {
     document.querySelector("#add-order-form").addEventListener("submit",createOrder);
     }
-
 
 const initializeProductDeletionListener = (deleteProduct) => {
     productListBody.addEventListener('click', async (event) => {
@@ -86,6 +109,9 @@ const initializeOrderStatusUpdateListener = (updateOrderStatus) => {
     });
     }
 export const initializeEventListeners = () => {
+    initializeCustomerSidebarToggle();
+    initializeOrderSidebarToggle();
+    initializeProductSidebarToggle();
     initializeProductDeletionListener(deleteProduct);
     initializeCustomerDeletionListener(deleteCustomer);
     initializeOrderDeletionListener(deleteOrder);
