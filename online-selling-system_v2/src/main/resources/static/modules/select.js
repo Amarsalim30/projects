@@ -58,3 +58,31 @@ export function initializeAddProductToOrder(productBaseUrl, debounce) {
       }
     });
   }
+
+
+
+export function initializeSelectCustomer(customerBaseUrl) {
+    $("#select-customer").select2({
+      placeholder: "Select a customer",
+      allowClear: true,
+      ajax: {
+        url: customerBaseUrl,
+        dataType: "json",
+        delay: 250,
+        data: function (params) {
+          return { search: params.term };
+        },
+        processResults: function (data) {
+          return {
+            results: data.map(customer => ({
+              id: customer.id,
+              text: customer.name + ' (' + customer.number+')' // Display name and number
+            }))
+          };
+        },
+        cache: true
+      },
+      minimumInputLength: 1,
+    });
+  
+  }

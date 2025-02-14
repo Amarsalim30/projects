@@ -6,7 +6,7 @@ import{createOrder,fetchOrders,deleteOrder,updateOrderStatus,fetchProducts
   ,updateOrderList,fetchOrdersByCustomerName,fetchOrdersByDate} from './sections/orders.js'
 import{fetchAndRenderProducts,deleteProduct} from './sections/products.js';
 import { initializeEventListeners } from './modules/eventlisteners.js';
-import {initializeAddProductToOrder} from './modules/select.js';
+import {initializeAddProductToOrder,initializeSelectCustomer} from './modules/select.js';
 // Fetch orders and render them on the calendar
 async function fetchAndRenderOrders() {
   try {
@@ -38,6 +38,7 @@ async function fetchAndRenderOrders() {
 document.addEventListener("DOMContentLoaded", function () {
   initializeEventListeners(); 
   initializeAddProductToOrder(productBaseUrl, debounce);
+  initializeSelectCustomer(customerBaseUrl);
   const phoneInput = document.getElementById('phone-number');
   
   if (phoneInput) {
@@ -84,29 +85,6 @@ document.addEventListener("DOMContentLoaded", function () {
       const content = this.nextElementSibling;
       content.style.display = content.style.display === "block" ? "none" : "block";
     });
-  });
-
-  $("#select-customer").select2({
-    placeholder: "Select a customer",
-    allowClear: true,
-    ajax: {
-      url: customerBaseUrl,
-      dataType: "json",
-      delay: 250,
-      data: function (params) {
-        return { search: params.term };
-      },
-      processResults: function (data) {
-        return {
-          results: data.map(customer => ({
-            id: customer.id,
-            text: customer.name + ' (' + customer.number+')' // Display name and number
-          }))
-        };
-      },
-      cache: true
-    },
-    minimumInputLength: 1,
   });
 
   // Initialize FullCalendar with new options
