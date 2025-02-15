@@ -189,31 +189,54 @@ button[type="button"]:hover {
 
 /* Sidebar Styles */
 .sidebar {
-  height: 100vh;
+  height: 100%;
   width: 0;
   position: fixed;
   top: 0;
   right: 0;
-  background: white;
+  background-color: white;
   overflow-x: hidden;
-  transition: width 0.3s;
+  transition: all 0.3s ease-in-out;
   padding: 0;
   box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
   z-index: 1000;
+  max-width: 95vw;
 }
 
 .sidebar.active {
-  width: 400px;
-  padding: 40px 20px 20px;
+  width: 420px;
+  padding: 60px 25px 25px;
 }
 
 .sidebar .closebtn {
   position: absolute;
-  top: 10px;
-  right: 15px;
-  font-size: 24px;
-  color: #aaa;
+  top: 15px;
+  right: 25px;
+  font-size: 28px;
   cursor: pointer;
+  color: #666;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.sidebar .closebtn:hover {
+  color: var(--primary-color);
+}
+
+.sidebar form {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.sidebar.active form {
+  opacity: 1;
+}
+
+@media (max-width: 768px) {
+  .sidebar.active {
+    width: 100%;
+    padding: 60px 15px 25px;
+  }
 }
 
 /* Button Styles */

@@ -3,32 +3,10 @@ import { deleteCustomer ,createCustomer} from '../sections/customers.js';
 import { deleteOrder, updateOrderStatus ,createOrder} from '../sections/orders.js';
 import { deleteProduct } from '../sections/products.js';
 
-
-const initializeCustomerSidebarToggle = () => {
-    document.getElementById("open-add-customer-sidebar").addEventListener("click", function () {
-        document.getElementById("add-customer-sidebar").classList.add("active");
-    }); 
-    document.getElementById("close-add-customer-sidebar").addEventListener("click", function () {
-        document.getElementById("add-customer-sidebar").classList.remove("active");
-    });
-    }
-const initializeOrderSidebarToggle = () => {
-    document.getElementById("open-add-order-sidebar").addEventListener("click", function () {
-        document.getElementById("add-order-sidebar").classList.add("active");
-    });
-    document.getElementById("close-add-order-sidebar").addEventListener("click", function () {
-        document.getElementById("add-order-sidebar").classList.remove("active");
-    });
-    }
-const initializeProductSidebarToggle = () => {
-    document.getElementById("open-add-product-sidebar").addEventListener("click", function () {
-        document.getElementById("add-product-sidebar").classList.add("active");
-    });
-    document.getElementById("close-add-product-sidebar").addEventListener("click", function () {
-        document.getElementById("add-product-sidebar").classList.remove("active");
-    });
-    }
-    
+// Remove these functions as they're now handled in navigation.js
+// const initializeCustomerSidebarToggle = () => { ... }
+// const initializeOrderSidebarToggle = () => { ... }
+// const initializeProductSidebarToggle = () => { ... }
 
 const initializeProductFormListener = (fetchProducts) => {  
     document.getElementById("add-product-form").addEventListener("submit", async function (event) {
@@ -109,15 +87,14 @@ const initializeOrderStatusUpdateListener = (updateOrderStatus) => {
     });
     }
 export const initializeEventListeners = () => {
-    initializeCustomerSidebarToggle();
-    initializeOrderSidebarToggle();
-    initializeProductSidebarToggle();
-    initializeProductDeletionListener(deleteProduct);
-    initializeCustomerDeletionListener(deleteCustomer);
-    initializeOrderDeletionListener(deleteOrder);
-    initializeOrderStatusUpdateListener(updateOrderStatus);
-    initializeProductSelectDeleteListener();
-    initializeProductFormListener();
-    initializeCustomerFormListener();
-    initializeOrderFormListener();
-    }
+  // ...existing code...
+  // Remove sidebar toggle initializations
+  initializeProductDeletionListener(deleteProduct);
+  initializeCustomerDeletionListener(deleteCustomer);
+  initializeOrderDeletionListener(deleteOrder);
+  initializeOrderStatusUpdateListener(updateOrderStatus);
+  initializeProductSelectDeleteListener();
+  initializeProductFormListener();
+  initializeCustomerFormListener();
+  initializeOrderFormListener();
+}
