@@ -23,6 +23,9 @@ export const CalendarModule = {
     }
   },
 
+  /**
+   * Fetch orders from the backend and render them on the calendar.
+   */
   async fetchAndRenderOrders() {
     showLoadingSpinner();
     try {
@@ -53,7 +56,11 @@ export const CalendarModule = {
     }
   },
 
+  /**
+   * Initialize the FullCalendar with configuration and event handlers.
+   */
   initializeFullCalendar() {
+    const self = this;
     this.config.elements.calendar.fullCalendar({
       header: {
         left: 'prev,next today',
@@ -63,16 +70,16 @@ export const CalendarModule = {
       editable: true,
       eventLimit: true,
       events: [],
-      dayRender: (date, cell) => {
+      dayRender(date, cell) {
         cell.css('min-height', '80px');
         const dateStr = date.format('YYYY-MM-DD');
-        const events = this.config.elements.calendar.fullCalendar('clientEvents', event => event.start.format('YYYY-MM-DD') === dateStr);
+        const events = self.config.elements.calendar.fullCalendar('clientEvents', event => event.start.format('YYYY-MM-DD') === dateStr);
         if (events.length > 0) {
           const indicator = $('<span class="event-indicator"></span>');
           cell.append(indicator);
         }
       },
-      eventRender: (event, element) => {
+      eventRender(event, element) {
         element.css({
           'border-radius': '4px',
           'border': 'none',
@@ -96,12 +103,12 @@ export const CalendarModule = {
         actions.find('.delete').click(function(e) {
           e.stopPropagation();
           if (confirm('Are you sure you want to delete this event?')) {
-            this.config.elements.calendar.fullCalendar('removeEvents', event._id);
+            self.config.elements.calendar.fullCalendar('removeEvents', event._id);
             // Add API call to delete event from backend
           }
         });
       },
-      eventClick: function(event) {
+      eventClick(event) {
         alert(`
           ${event.title}
           Time: ${event.start.format('HH:mm')}
@@ -111,6 +118,9 @@ export const CalendarModule = {
     });
   },
 
+  /**
+   * Initialize event listeners for calendar navigation and resizing.
+   */
   initializeEventListeners() {
     this.config.elements.prevMonth.addEventListener('click', () => {
       this.config.currentDate.setMonth(this.config.currentDate.getMonth() - 1);
@@ -127,6 +137,9 @@ export const CalendarModule = {
     }, 250));
   },
 
+  /**
+   * Render the calendar for the current month and year.
+   */
   renderCalendar() {
     const year = this.config.currentDate.getFullYear();
     const month = this.config.currentDate.getMonth();
@@ -138,12 +151,14 @@ export const CalendarModule = {
     this.config.elements.monthYear.textContent = new Intl.DateTimeFormat('en-US', { month: 'long', year: 'numeric' }).format(this.config.currentDate);
     this.config.elements.calendarDays.innerHTML = '';
 
+    // Render empty days before the first day of the month
     for (let i = 0; i < startingDay; i++) {
       const dayElement = document.createElement('div');
       dayElement.classList.add('calendar-day', 'inactive');
       this.config.elements.calendarDays.appendChild(dayElement);
     }
 
+    // Render days of the month
     for (let day = 1; day <= daysInMonth; day++) {
       const dayElement = document.createElement('div');
       dayElement.classList.add('calendar-day');
@@ -175,6 +190,10 @@ export const CalendarModule = {
     }
   },
 
+  /**
+   * Display events for the selected date.
+   * @param {string} dateString - The date string in YYYY-MM-DD format.
+   */
   displayEvents(dateString) {
     this.config.elements.selectedDate.textContent = new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'long', day: 'numeric' }).format(new Date(dateString));
     this.config.elements.eventItems.innerHTML = '';
@@ -213,6 +232,9 @@ export const CalendarModule = {
     }
   },
 
+  /**
+   * Initialize the calendar module.
+   */
   init() {
     this.initializeFullCalendar();
     this.initializeEventListeners();
