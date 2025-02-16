@@ -25,13 +25,71 @@
 <body>
   <!-- Navigation Bar -->
   <nav class="navbar" id="myTopnav">
-    <a href="#customer-management" class="active">Customer Management</a>
-    <a href="#order-management">Order Management</a>
-    <a href="#scheduling-management">Scheduling Management</a>
-    <a href="#product-list">Product List</a>
-    <a href="javascript:void(0);" class="icon">
-      <i class="fa fa-bars"></i>
-    </a>
+    <div class="navbar-container">
+      <a class="navbar-brand" href="#">
+        <i class="fa fa-briefcase"></i>
+        Business Management
+      </a>
+
+      <button class="navbar-toggle">
+        <i class="fa fa-bars"></i>
+      </button>
+
+      <ul class="navbar-menu">
+        <li class="nav-item">
+          <a class="nav-link" href="#customer-management">
+            <i class="fa fa-users"></i>
+            Customers
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#order-management">
+            <i class="fa fa-shopping-cart"></i>
+            Orders
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#scheduling-management">
+            <i class="fa fa-calendar"></i>
+            Schedule
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#product-list">
+            <i class="fa fa-cubes"></i>
+            Products
+          </a>
+        </li>
+      </ul>
+
+      <div class="navbar-actions">
+        <div class="notification-icon">
+          <i class="fa fa-bell"></i>
+          <span class="notification-badge">3</span>
+        </div>
+
+        <div class="dropdown">
+          <div class="user-profile">
+            <i class="fa fa-user-circle"></i>
+            <span>John Doe</span>
+          </div>
+          <div class="dropdown-content">
+            <a href="#profile">
+              <i class="fa fa-user"></i>
+              Profile
+            </a>
+            <a href="#settings">
+              <i class="fa fa-cog"></i>
+              Settings
+            </a>
+            <a href="#logout">
+              <i class="fa fa-sign-out"></i>
+              Logout
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
   </nav>
 
   <!-- Loading Spinner -->
@@ -65,10 +123,6 @@
 
       <!-- Collapsible Content -->
       <div class="content">
-        <!-- Pagination Controls -->
-        <div id="pagination-controls">
-          <!-- Pagination buttons will be dynamically inserted here -->
-        </div>
 
         <!-- Customer Table -->
         <table id="customer-list">
