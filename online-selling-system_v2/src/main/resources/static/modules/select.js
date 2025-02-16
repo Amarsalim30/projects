@@ -7,6 +7,7 @@ export function initializeAddProductToOrder(productBaseUrl, debounce) {
       const productDiv = createProductEntry();
       productSelection.appendChild(productDiv);
       initializeSelect2(productDiv, productBaseUrl);
+      initializeRemoveProduct(productDiv);
     }, 300));
   }
   
@@ -105,6 +106,14 @@ export function initializeAddProductToOrder(productBaseUrl, debounce) {
         e.stopPropagation();
     });
   }
+
+function initializeRemoveProduct(productDiv) {
+    const removeButton = productDiv.querySelector('.remove-product');
+    removeButton.addEventListener('click', () => {
+        productDiv.remove();
+        updateOrderTotal();
+    });
+}
 
 export function initializeSelectCustomer(customerBaseUrl) {
     const select = $("#select-customer");
