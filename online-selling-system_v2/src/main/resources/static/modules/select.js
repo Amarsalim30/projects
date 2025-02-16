@@ -28,7 +28,7 @@ export function initializeAddProductToOrder(productBaseUrl, debounce) {
             </div>
             <div class="form-group">
                 <label for="product-price">Unit Price (KES)</label>
-                <input type="number" class="product-price" readonly>
+                <input type="number" class="product-price" min="0" placeholder="0">
             </div>
             <div class="form-group">
                 <label>Subtotal</label>
