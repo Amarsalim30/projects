@@ -1,7 +1,6 @@
-import { hideSidebars } from "../modules/utility.js";
 import { customerBaseUrl } from "../modules/constants.js";
 import { customerListBody } from "../modules/domCaching.js";
-
+import { hideSidebars } from "../modules/navigation.js";
 /* --------------- Customer Section ----------------- */
 
 // Modified createCustomer function with proper validation and error handling

@@ -1,6 +1,6 @@
 import{customerListBody,productSelection,orderListBody,productListBody} from './modules/domCaching.js';
 import{customerBaseUrl,productBaseUrl,orderBaseUrl} from './modules/constants.js';
-import{hideSidebars,throttle,debounce,showLoadingSpinner,hideLoadingSpinner} from './modules/utility.js';
+import{throttle,debounce,showLoadingSpinner,hideLoadingSpinner} from './modules/utility.js';
 import{createCustomer,fetchCustomers,deleteCustomer,updateCustomerList} from './sections/customers.js'
 import{fetchOrders,fetchProducts} from './sections/orders.js'
 import{fetchAndRenderProducts,deleteProduct} from './sections/products.js';
@@ -10,6 +10,7 @@ import { initializeCustomerSearch } from './modules/search.js';
 import{initializePhoneInput} from './modules/phone-input.js';   
 import{initializeCollapsibleSections,initializeNavigation} from './modules/navigation.js';
 import { CalendarModule} from './sections/calendar.js';
+import { hideSidebars } from './modules/navigation.js';
 // Initialize plugins and event listeners after DOM is loaded
 document.addEventListener("DOMContentLoaded", function () {
   initializeEventListeners(); 

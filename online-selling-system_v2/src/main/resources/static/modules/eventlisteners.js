@@ -2,6 +2,7 @@ import { customerListBody,orderListBody,productListBody,productSelection } from 
 import { deleteCustomer ,createCustomer} from '../sections/customers.js';
 import { deleteOrder, updateOrderStatus ,createOrder} from '../sections/orders.js';
 import { deleteProduct } from '../sections/products.js';
+import { hideSidebars } from './navigation.js';
 
 // Remove these functions as they're now handled in navigation.js
 // const initializeCustomerSidebarToggle = () => { ... }

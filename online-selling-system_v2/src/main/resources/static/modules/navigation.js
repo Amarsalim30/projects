@@ -1,4 +1,5 @@
-function initializeSidebar() {
+export function initializeSidebar() {
+  
   // Open sidebar
   document.querySelectorAll('[id^="open-add-"]').forEach(button => {
     button.addEventListener('click', () => {
@@ -26,7 +27,14 @@ function initializeSidebar() {
       });
     }
   });
+  hideSidebars();
 }
+    // UI Helper: Hide all sidebars
+    export function hideSidebars() {
+      document.querySelectorAll(".sidebar").forEach((sidebar) => {
+        sidebar.classList.remove("active");
+      });
+    }
 
 export function initializeNavigation() {
   const navbar = document.getElementById("myTopnav");

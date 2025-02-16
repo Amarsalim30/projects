@@ -1,8 +1,7 @@
 
 import { orderBaseUrl, productBaseUrl } from '../modules/constants.js';
-import { hideSidebars } from '../modules/utility.js';
 import { productSelection } from '../modules/domCaching.js';
-
+import { hideSidebars } from '../modules/navigation.js';
 /* --------------- Order Section ----------------- */
 
 async function createOrder(event) {

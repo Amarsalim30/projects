@@ -29,13 +29,6 @@ function debounce(func, delay) {
       }
     };
   }
-
-  // UI Helper: Hide all sidebars
-function hideSidebars() {
-    document.querySelectorAll(".sidebar").forEach((sidebar) => {
-      sidebar.classList.remove("active");
-    });
-  }
   
     // Show loading spinner
     function showLoadingSpinner() {
@@ -52,4 +45,4 @@ function hideSidebars() {
         spinner.style.display = "none";
       }
     }
-export{hideSidebars,throttle,debounce,showLoadingSpinner,hideLoadingSpinner};
+export{throttle,debounce,showLoadingSpinner,hideLoadingSpinner};
