@@ -843,3 +843,399 @@ button[type="button"]:hover {
         border-radius: 0;
     }
 }
+
+/* Product Entry Styles */
+.product-entry {
+    position: relative;
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: var(--border-radius);
+    margin-bottom: 15px;
+    border: 1px solid #e9ecef;
+}
+
+/* Enhanced Product Entry Styles */
+.product-entry {
+    position: relative;
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: var(--border-radius);
+    margin-bottom: 15px;
+    border: 1px solid #e9ecef;
+    transition: all 0.3s ease;
+}
+
+.product-entry .form-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.product-entry .form-group {
+    position: relative;
+}
+
+.product-entry label {
+    display: block;
+    margin-bottom: 8px;
+    color: #495057;
+    font-weight: 500;
+}
+
+.product-entry .remove-product {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: none;
+    border: none;
+    color: var(--danger-color);
+    cursor: pointer;
+    padding: 8px;
+    font-size: 1.2rem;
+    opacity: 0.7;
+    transition: all 0.2s ease;
+    border-radius: 50%;
+}
+
+.product-entry .remove-product:hover {
+    opacity: 1;
+    background: rgba(231, 76, 60, 0.1);
+    transform: scale(1.1);
+}
+
+.product-entry input[readonly] {
+    background-color: #e9ecef;
+    cursor: not-allowed;
+}
+
+.product-entry .product-subtotal {
+    font-weight: 500;
+    color: var(--primary-color);
+    transition: all 0.3s ease;
+}
+
+.product-entry .product-subtotal.highlight {
+    color: var(--success-color);
+    transform: scale(1.05);
+}
+
+.select-loading {
+    position: absolute;
+    right: 30px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #666;
+    font-size: 0.9em;
+}
+
+/* Animation for total amount */
+#order-total-amount {
+    transition: transform 0.2s ease;
+    display: inline-block;
+}
+
+/* Enhanced Order Form Styles */
+#add-order-form {
+    max-width: 100%;
+    position: relative;
+    padding: 0 5px;
+}
+
+.form-title {
+    font-size: 1.8rem;
+    color: var(--primary-color);
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--primary-color);
+    position: relative;
+}
+
+.form-title::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 50px;
+    height: 2px;
+    background-color: var(--secondary-color);
+}
+
+.form-section {
+    margin: 2rem 0;
+    padding: 1.5rem;
+    background: #fff;
+    border-radius: var(--border-radius);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    border: 1px solid #eee;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.form-section:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.form-section h4 {
+    color: var(--primary-color);
+    font-size: 1.2rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.form-section h4::before {
+    font-family: 'FontAwesome';
+    font-size: 1rem;
+}
+
+.form-section:nth-child(1) h4::before { content: '\f007'; }
+.form-section:nth-child(2) h4::before { content: '\f07a'; }
+.form-section:nth-child(3) h4::before { content: '\f073'; }
+
+.required {
+    color: var(--danger-color);
+    font-weight: bold;
+    font-size: 1.2em;
+    margin-left: 4px;
+}
+
+.form-summary {
+    background: linear-gradient(145deg, #f8f9fa, #fff);
+    padding: 1.5rem;
+    border-radius: var(--border-radius);
+    margin: 2rem 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    border: 1px solid #e9ecef;
+}
+
+.order-details {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.subtotal, .total {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.75rem;
+    border-radius: 4px;
+}
+
+.subtotal {
+    background: rgba(52, 152, 219, 0.05);
+}
+
+.total {
+    background: rgba(46, 204, 113, 0.05);
+    border-top: 2px dashed #dee2e6;
+    margin-top: 0.5rem;
+    padding-top: 1rem;
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #eee;
+}
+
+.btn-outline {
+    background: none;
+    border: 2px dashed #ccc;
+    color: var(--primary-color);
+    width: 100%;
+    padding: 1rem;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin: 1rem 0;
+}
+
+.btn-outline:hover {
+    border-color: var(--primary-color);
+    background: rgba(52, 152, 219, 0.05);
+    transform: translateY(-1px);
+}
+
+.btn-outline i {
+    transition: transform 0.3s ease;
+}
+
+.btn-outline:hover i {
+    transform: rotate(90deg);
+}
+
+button[type="submit"]:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+    opacity: 0.7;
+    transform: none;
+}
+
+/* Product Entry Animation */
+.product-entry {
+    animation: slideDown 0.3s ease-out forwards;
+    opacity: 0;
+    transform: translateY(-20px);
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Form Validation Styles */
+.form-group {
+    position: relative;
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #495057;
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+.form-group:focus-within label {
+    color: var(--primary-color);
+}
+
+/* Mobile Optimizations for Order Form */
+@media (max-width: 768px) {
+    #add-order-sidebar.active {
+        width: 100%;
+        padding: 50px 15px 20px;
+    }
+
+    .form-title {
+        font-size: 1.4rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .form-section {
+        padding: 1rem;
+        margin: 1rem 0;
+    }
+
+    .form-section h4 {
+        font-size: 1.1rem;
+    }
+
+    .product-entry {
+        padding: 15px;
+    }
+
+    .product-entry .form-row {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .product-entry .remove-product {
+        top: 50%;
+        transform: translateY(-50%);
+        right: 15px;
+        background: rgba(231, 76, 60, 0.1);
+        padding: 10px;
+    }
+
+    .form-summary {
+        margin: 1rem 0;
+        padding: 1rem;
+    }
+
+    .subtotal, .total {
+        padding: 0.5rem;
+        font-size: 0.95rem;
+    }
+
+    .total {
+        font-size: 1.1rem;
+    }
+
+    .form-actions {
+        flex-direction: column-reverse;
+        gap: 0.5rem;
+        margin-top: 1.5rem;
+    }
+
+    .form-actions button {
+        width: 100%;
+        padding: 12px;
+        font-size: 1rem;
+    }
+
+    .btn-outline {
+        padding: 12px;
+        margin: 0.5rem 0;
+    }
+
+    /* Fix Select2 on mobile */
+    .select2-container .select2-selection--single {
+        height: 44px !important;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+        line-height: 44px !important;
+    }
+
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+        height: 42px !important;
+    }
+
+    .select2-search__field {
+        height: 40px !important;
+        font-size: 16px !important;
+    }
+
+    .select2-container--default .select2-results>.select2-results__options {
+        max-height: 40vh !important;
+    }
+
+    /* Better touch targets */
+    label {
+        margin-bottom: 8px;
+        font-size: 0.95rem;
+    }
+
+    input, select {
+        height: 44px;
+        font-size: 16px !important; /* Prevent zoom on iOS */
+    }
+
+    /* Sticky form actions */
+    .form-actions {
+        position: sticky;
+        bottom: 0;
+        background: white;
+        padding: 15px;
+        margin: 0 -15px -20px;
+        box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        border-top: 1px solid #eee;
+    }
+
+    /* Improved scrolling */
+    #add-order-form {
+        max-height: calc(100vh - 60px);
+        overflow-y: auto;
+        padding-bottom: 80px; /* Space for sticky buttons */
+        -webkit-overflow-scrolling: touch;
+    }
+}

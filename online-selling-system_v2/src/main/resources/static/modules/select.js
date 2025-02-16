@@ -14,11 +14,43 @@ export function initializeAddProductToOrder(productBaseUrl, debounce) {
     const productDiv = document.createElement("div");
     productDiv.classList.add("product-entry");
     productDiv.innerHTML = `
-      <select class="product-select" required></select>
-      <input type="number" class="product-quantity" placeholder="Quantity" required>
-      <input type="number" class="product-price" placeholder="Price" required>
-      <button type="button" class="remove-product">Remove</button>
+        <div class="form-group">
+            <label for="product-select">Product *</label>
+            <select class="product-select" required>
+                <option value="">Search for a product</option>
+            </select>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="product-quantity">Quantity *</label>
+                <input type="number" class="product-quantity" min="1" value="1" required>
+            </div>
+            <div class="form-group">
+                <label for="product-price">Unit Price (KES)</label>
+                <input type="number" class="product-price" readonly>
+            </div>
+            <div class="form-group">
+                <label>Subtotal</label>
+                <input type="text" class="product-subtotal" readonly value="KES 0.00">
+            </div>
+        </div>
+        <button type="button" class="remove-product" title="Remove Product">
+            <i class="fa fa-times"></i>
+        </button>
     `;
+
+    // Add fade-in animation
+    productDiv.style.opacity = '0';
+    requestAnimationFrame(() => {
+        productDiv.style.opacity = '1';
+    });
+
+    // Add event listener for quantity changes
+    const quantityInput = productDiv.querySelector('.product-quantity');
+    quantityInput.addEventListener('change', () => {
+        updateOrderTotal();
+    });
+
     return productDiv;
   }
   
@@ -56,12 +88,18 @@ export function initializeAddProductToOrder(productBaseUrl, debounce) {
             const product = await response.json();
             if (product.price) {
                 entry.querySelector('.product-price').value = product.price;
+                updateProductSubtotal(entry);
+                updateOrderTotal();
             }
         } catch (error) {
             console.error("Error fetching product:", error);
+            alert("Failed to fetch product details");
         }
     });
 
+    // Add loading indicator
+    select.insertAdjacentHTML('afterend', '<div class="select-loading" style="display:none">Loading...</div>');
+    
     // Prevent event bubbling for the entire product entry
     $(container).on('click', function(e) {
         e.stopPropagation();

@@ -56,12 +56,123 @@ const initializeProductDeletionListener = (deleteProduct) => {
     }
     // Use event delegation for dynamically added "Remove" buttons
 const initializeProductSelectDeleteListener = () => {
-    productSelection.addEventListener('click', (event) => {
-        if (event.target.classList.contains('remove-product')) {
-        event.target.closest('.product-entry').remove();
+    document.addEventListener('click', (event) => {
+        if (event.target.classList.contains('remove-product') || 
+            event.target.closest('.remove-product')) {
+            event.preventDefault();
+            event.stopPropagation();
+            
+            const productEntry = event.target.closest('.product-entry');
+            if (productEntry) {
+                if (document.querySelectorAll('.product-entry').length === 1) {
+                    alert('At least one product is required');
+                    return;
+                }
+                
+                // Smooth removal animation
+                productEntry.style.opacity = '0';
+                productEntry.style.transform = 'translateX(20px)';
+                
+                setTimeout(() => {
+                    // Cleanup Select2 instance before removing element
+                    const select = productEntry.querySelector('.product-select');
+                    if ($(select).data('select2')) {
+                        $(select).select2('destroy');
+                    }
+                    productEntry.remove();
+                    updateOrderTotal();
+                }, 300);
+            }
         }
     });
+
+    // Listen for quantity changes
+    document.addEventListener('input', (event) => {
+        if (event.target.classList.contains('product-quantity')) {
+            const quantity = parseInt(event.target.value) || 0;
+            if (quantity < 1) {
+                event.target.value = 1;
+            }
+            updateProductSubtotal(event.target.closest('.product-entry'));
+            updateOrderTotal();
+        }
+    });
+}
+
+function updateProductSubtotal(productEntry) {
+    const quantity = parseInt(productEntry.querySelector('.product-quantity').value) || 0;
+    const price = parseFloat(productEntry.querySelector('.product-price').value) || 0;
+    const subtotal = quantity * price;
+    
+    const subtotalElement = productEntry.querySelector('.product-subtotal');
+    if (subtotalElement) {
+        subtotalElement.value = `KES ${subtotal.toFixed(2)}`;
+        subtotalElement.classList.toggle('highlight', subtotal > 0);
     }
+}
+
+function updateOrderTotal() {
+    const subtotals = Array.from(document.querySelectorAll('.product-entry')).map(entry => {
+        const quantity = parseInt(entry.querySelector('.product-quantity')?.value) || 0;
+        const price = parseFloat(entry.querySelector('.product-price')?.value) || 0;
+        return quantity * price;
+    });
+    
+    const subtotal = subtotals.reduce((sum, value) => sum + value, 0);
+    const totalElement = document.getElementById('order-total-amount');
+    const subtotalElement = document.getElementById('order-subtotal');
+    
+    if (subtotalElement) {
+        subtotalElement.textContent = `KES ${subtotal.toFixed(2)}`;
+    }
+    
+    if (totalElement) {
+        totalElement.style.transform = 'scale(1.1)';
+        totalElement.textContent = `KES ${subtotal.toFixed(2)}`;
+        
+        setTimeout(() => {
+            totalElement.style.transform = 'scale(1)';
+        }, 200);
+    }
+
+    validateOrderForm();
+}
+
+function validateOrderForm() {
+    const form = document.getElementById('add-order-form');
+    const customer = document.getElementById('select-customer').value;
+    const dateOfEvent = document.getElementById('date-of-event').value;
+    const status = document.getElementById('order-status').value;
+    const products = document.querySelectorAll('.product-entry');
+    const total = parseFloat(document.getElementById('order-total-amount').textContent.replace('KES ', '')) || 0;
+
+    const isValid = customer && dateOfEvent && status && 
+                    products.length > 0 && total > 0;
+
+    const submitButton = form.querySelector('button[type="submit"]');
+    submitButton.disabled = !isValid;
+    
+    return isValid;
+}
+
+function initializeOrderFormValidation() {
+    const form = document.getElementById('add-order-form');
+    const inputs = form.querySelectorAll('input, select');
+
+    inputs.forEach(input => {
+        input.addEventListener('change', validateOrderForm);
+        input.addEventListener('input', validateOrderForm);
+    });
+
+    // Prevent submitting if validation fails
+    form.addEventListener('submit', (e) => {
+        if (!validateOrderForm()) {
+            e.preventDefault();
+            alert('Please fill in all required fields and add at least one product.');
+        }
+    });
+}
+
 const initializeCustomerDeletionListener = (deleteCustomer) => {
     customerListBody.addEventListener('click', async (event) => {
         if (event.target.classList.contains('delete-btn')) {
@@ -87,6 +198,32 @@ const initializeOrderStatusUpdateListener = (updateOrderStatus) => {
         }
     });
     }
+
+const initializeOrderFormListeners = (createOrder) => {
+    const form = document.querySelector("#add-order-form");
+    const addProductBtn = document.querySelector("#add-product");
+    
+    if (form) {
+        form.addEventListener("submit", (e) => {
+            e.preventDefault();
+            createOrder(e);
+        });
+    }
+    
+    if (addProductBtn) {
+        addProductBtn.addEventListener("click", (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const productSelection = document.querySelector("#product-selection");
+            if (productSelection) {
+                const productDiv = createProductEntry();
+                productSelection.appendChild(productDiv);
+                initializeSelect2(productDiv);
+            }
+        });
+    }
+}
+
 export const initializeEventListeners = () => {
   // ...existing code...
   // Remove sidebar toggle initializations
@@ -97,5 +234,13 @@ export const initializeEventListeners = () => {
   initializeProductSelectDeleteListener();
   initializeProductFormListener();
   initializeCustomerFormListener();
-  initializeOrderFormListener();
+  initializeOrderFormListeners(createOrder);
+  initializeOrderFormValidation();
+  
+  // Prevent sidebar closing when interacting with form elements
+  document.querySelectorAll('.sidebar form').forEach(form => {
+      form.addEventListener('click', (e) => {
+          e.stopPropagation();
+      });
+  });
 }

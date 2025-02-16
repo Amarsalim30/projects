@@ -150,26 +150,69 @@
 
       <!-- Sidebar for adding an order -->
       <div id="add-order-sidebar" class="sidebar">
-        <!-- Close button -->
         <a href="javascript:void(0)" class="closebtn" id="close-add-order-sidebar">&times;</a>
         <form id="add-order-form">
-          <select id="select-customer" required>
-            <!-- Customer options will be populated here -->
-          </select>
-          <div id="product-selection">
-            <!-- Product selection fields will be added here -->
-          </div>
-          <!-- Date of Event Field -->
-          <label for="date-of-event">Date of Event:</label>
-          <input type="date" id="date-of-event" name="date-of-event" required />
-          <button type="button" id="add-product" class="btn-secondary">Add Product</button>
-          <label for="order-status">Order Status:</label>
-          <select id="order-status" name="status" required>
-            <option value="pending">Pending</option>
-            <option value="completed">Completed</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
-          <button type="submit" class="btn-primary">Add Order</button>
+            <h3 class="form-title">Create New Order</h3>
+            
+            <div class="form-section">
+                <h4>Customer Details</h4>
+                <div class="form-group">
+                    <label for="select-customer">Customer <span class="required">*</span></label>
+                    <select id="select-customer" name="customerId" required>
+                        <option value="">Search for customer...</option>
+                    </select>
+                </div>
+            </div>
+    
+            <div class="form-section">
+                <h4>Order Items</h4>
+                <div id="product-selection">
+                    <!-- Product entries will be added here -->
+                </div>
+                <button type="button" id="add-product" class="btn-outline">
+                    <i class="fa fa-plus"></i> Add Another Product
+                </button>
+            </div>
+    
+            <div class="form-section">
+                <h4>Order Details</h4>
+                <div class="form-group">
+                    <label for="date-of-event">Event Date <span class="required">*</span></label>
+                    <input type="date" id="date-of-event" name="dateOfEvent" required>
+                </div>
+                <div class="form-group">
+                    <label for="order-status">Status <span class="required">*</span></label>
+                    <select id="order-status" name="status" required>
+                        <option value="">Select status...</option>
+                        <option value="pending">Pending</option>
+                        <option value="processing">Processing</option>
+                        <option value="completed">Completed</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                </div>
+            </div>
+    
+            <div class="form-summary">
+                <div class="order-details">
+                    <div class="subtotal">
+                        <span>Subtotal:</span>
+                        <span id="order-subtotal">KES 0.00</span>
+                    </div>
+                    <div class="total">
+                        <span>Total Amount:</span>
+                        <span id="order-total-amount">KES 0.00</span>
+                    </div>
+                </div>
+            </div>
+    
+            <div class="form-actions">
+                <button type="button" class="btn-secondary" onclick="document.getElementById('close-add-order-sidebar').click()">
+                    Cancel
+                </button>
+                <button type="submit" class="btn-primary" disabled>
+                    Create Order
+                </button>
+            </div>
         </form>
       </div>
 
