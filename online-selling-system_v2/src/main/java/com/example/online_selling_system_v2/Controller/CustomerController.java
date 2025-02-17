@@ -22,6 +22,8 @@ import com.example.online_selling_system_v2.Mapper.CustomerMapper;
 import com.example.online_selling_system_v2.Service.CustomerService;
 
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+
 import jakarta.validation.Valid;
 
 @RestController
@@ -46,7 +48,7 @@ public class CustomerController {
     }
 
     // Create a new customer with validation and error handling
-    @PostMapping("/new")
+    @PostMapping(value = "/new", consumes = "application/json")
     public ResponseEntity<?> createNewCustomer(@Valid @RequestBody CustomerDTO newCustomerDTO) {
         try {
             logger.info("Creating new customer: {}", newCustomerDTO);
@@ -59,7 +61,7 @@ public class CustomerController {
     }
 
     // Update an existing customer
-    @PostMapping("/update/{id}")
+    @PutMapping(value = "/update/{id}", consumes = "application/json")
     public ResponseEntity<?> updateCustomer(@PathVariable Long id, @Valid @RequestBody CustomerDTO updatedCustomerDTO) {
         try {
             logger.info("Updating customer with ID: {}", id);
