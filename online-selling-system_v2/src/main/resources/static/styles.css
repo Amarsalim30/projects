@@ -668,6 +668,7 @@ button[type="button"]:hover {
 
 .calendar-header h2 {
     margin: 0;
+    color: #fff;
     font-size: 1.6em;
     font-weight: 500;
 }

@@ -1,4 +1,5 @@
-
+import { productBaseUrl } from "../modules/constants.js";
+import{productListBody} from "../modules/domCaching.js";
 // Fetch products and update the product list UI
 async function fetchAndRenderProducts() {
     try {
@@ -21,7 +22,7 @@ async function fetchAndRenderProducts() {
       });
     } catch (error) {
       console.error("Error fetching products:", error);
-      alert("Error fetching products");
+      alert("Error fetching products"+error.message);
     }
   }
   
@@ -33,10 +34,10 @@ async function fetchAndRenderProducts() {
         { method: "DELETE" }
       );
       if (!response.ok) throw new Error("Failed to delete product");
-      fetchAndRenderProducts();
+      await fetchAndRenderProducts();
     } catch (error) {
       console.error(error);
-      alert("Error deleting product");
+      alert("Error deleting product"+error.message);
     }
   }
 export { fetchAndRenderProducts, deleteProduct };  

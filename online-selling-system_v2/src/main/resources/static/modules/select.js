@@ -24,7 +24,7 @@ export function initializeAddProductToOrder(productBaseUrl, debounce) {
         <div class="form-row">
             <div class="form-group">
                 <label for="product-quantity">Quantity *</label>
-                <input type="number" class="product-quantity" min="1" value="1" required>
+                <input type="number" class="product-quantity" min="1" placeholder="1" required>
             </div>
             <div class="form-group">
                 <label for="product-price">Unit Price (KES)</label>

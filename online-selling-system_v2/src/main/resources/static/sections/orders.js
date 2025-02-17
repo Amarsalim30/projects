@@ -1,6 +1,6 @@
 
 import { orderBaseUrl, productBaseUrl } from '../modules/constants.js';
-import { productSelection } from '../modules/domCaching.js';
+import { productSelection, orderListBody } from '../modules/domCaching.js';
 import { hideSidebars } from '../modules/navigation.js';
 /* --------------- Order Section ----------------- */
 
@@ -8,8 +8,13 @@ async function createOrder(event) {
     event.preventDefault();
     const form = document.querySelector("#add-order-form");
     const formData = new FormData(form);
+    const customerID = parseInt(formData.get("select-customer"));
+      if (!customerId) {
+        alert("Please select a customer");
+        return;
+      }
     const newOrder = {
-      customerId: formData.get("select-customer"),
+      customerId: customerID,
       dateOfEvent: formData.get("date-of-event"),
       status: formData.get("status"),
       products: [], // Populate with product details
@@ -49,7 +54,7 @@ async function createOrder(event) {
       const response = await fetch(url);
       if (!response.ok) throw new Error("Failed to fetch orders");
       const orders = await response.json();
-      const orderListBody = document.querySelector("#order-list tbody");
+      // const orderListBody = document.querySelector("#order-list tbody");
       orderListBody.innerHTML = ""; // Clear current list
   
       orders.forEach((order) => {
@@ -80,7 +85,7 @@ async function createOrder(event) {
         { method: "DELETE" }
       );
       if (!response.ok) throw new Error("Failed to delete order");
-      fetchOrders();
+      await fetchOrders();
     } catch (error) {
       console.error(error);
       alert("Error deleting order");
@@ -96,7 +101,7 @@ async function createOrder(event) {
         body: JSON.stringify({ status: newStatus }),
       });
       if (!response.ok) throw new Error("Failed to update order status");
-      fetchOrders();
+      await fetchOrders();
     } catch (error) {
       console.error(error);
       alert("Error updating order status");
@@ -173,4 +178,5 @@ async function fetchOrdersByDate(date) {
 
 
 
-  export{createOrder,fetchOrders,deleteOrder,updateOrderStatus,fetchProducts,updateOrderList,fetchOrdersByCustomerName,fetchOrdersByDate};
+  export{createOrder,fetchOrders,deleteOrder,updateOrderStatus,fetchProducts
+    ,updateOrderList,fetchOrdersByCustomerName,fetchOrdersByDate};

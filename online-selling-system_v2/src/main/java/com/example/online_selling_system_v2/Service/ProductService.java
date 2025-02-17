@@ -35,4 +35,8 @@ public class ProductService {
     public List<Product> searchProducts(String searchTerm) {
         return productRepository.findByNameContainingIgnoreCase(searchTerm);
     }
+
+    public Product getProductById(Long id) {
+        return productRepository.findById(id).orElse(null);
+    }
 }

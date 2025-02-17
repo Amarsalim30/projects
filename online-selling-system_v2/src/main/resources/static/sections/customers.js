@@ -87,7 +87,7 @@ async function createCustomer(event) {
     } catch (error) {
       if (error.name !== 'AbortError') {
         console.error(error);
-        alert("Error fetching customersUI",error);
+        alert("Error fetching customersUI: "+error.message);
       }
     }
   }
@@ -100,7 +100,7 @@ async function deleteCustomer(customerId) {
         { method: "DELETE" }
       );
       if (!response.ok) throw new Error("Failed to delete customer");
-      fetchCustomers();
+      await fetchCustomers();
     } catch (error) {
       console.error(error);
       alert("Error deleting customer");

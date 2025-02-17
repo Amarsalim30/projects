@@ -1,23 +1,21 @@
-import { customerListBody,orderListBody,productListBody,productSelection } from './domCaching.js';
-import { deleteCustomer ,createCustomer} from '../sections/customers.js';
-import { deleteOrder, updateOrderStatus ,createOrder} from '../sections/orders.js';
-import { deleteProduct } from '../sections/products.js';
+import { customerListBody, orderListBody, productListBody } from './domCaching.js';
+import { deleteCustomer, createCustomer } from '../sections/customers.js';
+import { deleteOrder, updateOrderStatus, createOrder } from '../sections/orders.js';
+import { deleteProduct, fetchAndRenderProducts } from '../sections/products.js';
 import { hideSidebars } from './navigation.js';
+import { productBaseUrl } from './constants.js';
 
-// Remove these functions as they're now handled in navigation.js
-// const initializeCustomerSidebarToggle = () => { ... }
-// const initializeOrderSidebarToggle = () => { ... }
-// const initializeProductSidebarToggle = () => { ... }
+const initializeProductFormListener = (fetchAndRenderProducts) => {  
+const form = document.getElementById("add-product-form");
+    if (!form) return;
 
-const initializeProductFormListener = (fetchProducts) => {  
-    document.getElementById("add-product-form").addEventListener("submit", async function (event) {
+    form.addEventListener("submit", async function (event) {
         event.preventDefault();
-        const form = event.target;
-        const formData = new FormData(form);
+                const formData = new FormData(event.target);
         const newProduct = {
           name: formData.get("name"),
           stock: formData.get("availability"),
-          price: formData.get("price") // Add price field
+          price: formData.get("price")
         };
     
         try {
@@ -29,16 +27,16 @@ const initializeProductFormListener = (fetchProducts) => {
     
           if (!response.ok) throw new Error("Failed to add product");
     
-          // Reset form and update UI
-          form.reset();
+          event.target.reset();
           hideSidebars();
-          await fetchProducts();
+          await fetchAndRenderProducts();
         } catch (error) {
           console.error("Add product error:", error);
           alert("Error adding product: " + error.message);
         }
       });
     }
+
 const initializeCustomerFormListener = (createCustomer) => {
     document.querySelector("#add-customer-form").addEventListener("submit",createCustomer);
     }
@@ -232,8 +230,8 @@ export const initializeEventListeners = () => {
   initializeOrderDeletionListener(deleteOrder);
   initializeOrderStatusUpdateListener(updateOrderStatus);
   initializeProductSelectDeleteListener();
-  initializeProductFormListener();
-  initializeCustomerFormListener();
+  initializeProductFormListener(fetchAndRenderProducts);
+  initializeCustomerFormListener(createCustomer);
   initializeOrderFormListeners(createOrder);
   initializeOrderFormValidation();
   
