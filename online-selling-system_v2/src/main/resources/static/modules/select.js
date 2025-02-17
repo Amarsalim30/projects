@@ -66,7 +66,7 @@ export function initializeAddProductToOrder(productBaseUrl, debounce) {
         ajax: {
             url: productBaseUrl,
             dataType: 'json',
-            delay: 250,
+            delay: 600,
             data: (params) => ({ searchTerm: params.term }),
             processResults: (data) => ({
                 results: data.map(product => ({
@@ -117,33 +117,42 @@ function initializeRemoveProduct(productDiv) {
 
 export function initializeSelectCustomer(customerBaseUrl) {
     const select = $("#select-customer");
-    
+    const loadingIndicator = $('<div class="select-loading">Loading...</div>').hide();
+    select.after(loadingIndicator);
+
     select.select2({
         placeholder: "Select a customer",
         allowClear: true,
         dropdownParent: $('#add-order-sidebar'),
         ajax: {
-            url: customerBaseUrl,
+            url: `${customerBaseUrl}/search`,
             dataType: "json",
             delay: 250,
-            data: function (params) {
-                return { search: params.term };
-            },
-            processResults: function (data) {
-                return {
-                    results: data.map(customer => ({
-                        id: customer.id,
-                        text: customer.name + ' (' + customer.number + ')'
-                    }))
-                };
-            },
+            data: (params) => ({ name: params.term }),
+            beforeSend: () => loadingIndicator.show(),
+            complete: () => loadingIndicator.hide(),
+            processResults: (data) => ({
+                results: data.map(customer => ({
+                    id: customer.id,
+                    text: formatCustomerName(customer),
+                    customer: customer
+                }))
+            }),
+            //error: () => alert('Failed to fetch customers. Please try again.'),
             cache: true
         },
         minimumInputLength: 1
+    }).on('select2:open', () => {
+        document.querySelector('.select2-search__field').focus();
     });
 
-    // Prevent sidebar from closing when interacting with Select2
-    $(document).on('click', '.select2-container, .select2-dropdown, .select2-search__field', function(e) {
-        e.stopPropagation();
-    });
+    $(document).on('click', '.select2-container, .select2-dropdown, .select2-search__field', 
+        (e) => e.stopPropagation()
+    );
+}
+
+function formatCustomerName(customer) {
+    const name = customer.name || 'Unknown';
+    const number = customer.number || 'No number';
+    return `${name} (${number})`;
 }

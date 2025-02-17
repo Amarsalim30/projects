@@ -3,13 +3,15 @@ import { orderBaseUrl, productBaseUrl } from '../modules/constants.js';
 import { productSelection, orderListBody } from '../modules/domCaching.js';
 import { hideSidebars } from '../modules/navigation.js';
 /* --------------- Order Section ----------------- */
+// Create order >Select Customer> Add product entry >Fill product details 
+// >Date of event >Status >Submit
 
 async function createOrder(event) {
     event.preventDefault();
     const form = document.querySelector("#add-order-form");
     const formData = new FormData(form);
     const customerID = parseInt(formData.get("select-customer"));
-      if (!customerId) {
+      if (!customerID) {
         alert("Please select a customer");
         return;
       }
