@@ -27,6 +27,15 @@ const initializeOrderFormListener = () => {
         });
     }
 }
+const initializeOrderDeletionListener = () => {
+    orderListBody.addEventListener('click', async (event) => {
+        if (event.target.classList.contains('delete-btn')) {
+            const orderId = event.target.dataset.id;
+            await deleteOrder(orderId);
+        }
+    });
+}
+
 
 /*---------------Order Form Validation------------------------------*/
 
@@ -78,6 +87,7 @@ const initializeOrderStatusUpdateListener = () => {
 
 export {
     initializeOrderFormListener,
+    initializeOrderDeletionListener,
     initializeOrderFormValidation,
     initializeOrderStatusUpdateListener
 }

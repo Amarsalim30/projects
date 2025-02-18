@@ -9,74 +9,29 @@ import {initializeOrderFormListener,initializeOrderFormValidation,initializeOrde
 import {initializeProductSelectDeleteListener} from '../orderForm/ProductEntry.js'
 import {initializeCustomerFormListener} from '../sections/customers.js'
 import { initializeCustomerSearch } from '../sections/customers/search.js';
-/*---------------Form Listerners----------------------------------*/
+import { initializeProductFormListener,initializeProductDeletionListener } from '../sections/products/products.js';
 
-const initializeProductFormListener = () => {
-    const form = document.getElementById("add-product-form");
-    if (!form) return;
-
-    form.addEventListener("submit", async function (event) {
-        event.preventDefault();
-        const formData = new FormData(event.target);
-        const newProduct = {
-            name: formData.get("name"),
-            stock: formData.get("availability"),
-            price: formData.get("price")
-        };
-
-        try {
-            const response = await fetch(`${productBaseUrl}/new`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(newProduct),
-            });
-
-            if (!response.ok) throw new Error("Failed to add product");
-
-            event.target.reset();
-            hideSidebars();
-            await fetchAndRenderProducts();
-        } catch (error) {
-            console.error("Add product error:", error);
-            alert("Error adding product: " + error.message);
-        }
-    });
-}
 const initializeCustomerSectionEventListeners=()=>{
     initializeCustomerSearch();
     initializeCustomerFormListener();
     initializeCustomerDeletionListener();
 }
-/*---------------Delete in List Listerners------------------------------*/
-
-const initializeProductDeletionListener = () => {
-    productListBody.addEventListener('click', async (event) => {
-        if (event.target.classList.contains('delete-btn')) {
-            const productId = event.target.dataset.id;
-            await deleteProduct(productId);
-        }
-    });
+const initializeProductSectionEventListeners=()=>{
+    initializeProductFormListener();
+    initializeProductDeletionListener();
+}
+const initializeOrderSectionListeners=()=>{
+    initializeOrderFormListener();
+    initializeOrderDeletionListener();
+    initializeOrderFormValidation
+    initializeOrderStatusUpdateListener
 }
 
-const initializeOrderDeletionListener = () => {
-    orderListBody.addEventListener('click', async (event) => {
-        if (event.target.classList.contains('delete-btn')) {
-            const orderId = event.target.dataset.id;
-            await deleteOrder(orderId);
-        }
-    });
-}
 
 /*---------------Event Listener Initialization------------------------------*/
 export const initializeEventListeners = () => {
     initializeCustomerSectionEventListeners();
-
-    //Form Listeners
-    initializeProductFormListener();
-    initializeOrderFormListener
-    //Delete From List Listeners
-    initializeProductDeletionListener();
-    initializeOrderDeletionListener();
+    initializeProductSectionEventListeners();
 
     //Update Order Status Listener
     initializeOrderStatusUpdateListener();
