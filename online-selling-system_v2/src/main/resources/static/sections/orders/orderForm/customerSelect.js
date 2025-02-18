@@ -1,6 +1,6 @@
-import { debounce } from '../modules/utility.js';
-import fetchController from '../modules/fetchController.js';
-import { customerBaseUrl } from '../modules/apiConstants.js';
+import { debounce } from '../../../modules/utility.js';
+import fetchController from '../../../modules/fetchController.js';
+import { customerBaseUrl } from '../../../modules/apiConstants.js';
 
 export function initializeSelectCustomer() {
     const select = $("#select-customer");

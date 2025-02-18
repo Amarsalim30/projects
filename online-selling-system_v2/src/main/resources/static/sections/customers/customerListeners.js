@@ -1,3 +1,4 @@
+import{ createCustomer, deleteCustomer } from '../customers/customers.js';
 export const initializeCustomerFormListener = () => {
     document.querySelector("#add-customer-form").addEventListener("submit", createCustomer);
 }

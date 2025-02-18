@@ -1,4 +1,4 @@
-import { createOrder, updateOrderStatus } from "../orders.js";
+import { createOrder, updateOrderStatus ,deleteOrder } from "../orders.js";
 import { initializeSelectProduct, createProductEntry, cleanup as productEntryCleanup } from "./ProductEntry.js";
 import { orderListBody } from "../../../modules/domCaching.js";
 import { validateOrderForm } from "./orderValidation.js";
@@ -35,7 +35,6 @@ const initializeOrderDeletionListener = () => {
         }
     });
 }
-
 
 /*---------------Order Form Validation------------------------------*/
 

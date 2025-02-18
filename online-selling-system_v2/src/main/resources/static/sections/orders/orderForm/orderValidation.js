@@ -1,16 +1,26 @@
 export function validateOrderForm() {
     const form = document.getElementById('add-order-form');
-    const customer = document.getElementById('select-customer').value;
-    const dateOfEvent = document.getElementById('date-of-event').value;
-    const status = document.getElementById('order-status').value;
+    if (!form) return false;
+
+    const customer = form.querySelector('#select-customer').value;
+    if (!customer) return false;
+
+    const dateOfEvent = form.querySelector('input[name="date-of-event"]').value;
+    if (!dateOfEvent || new Date(dateOfEvent) < new Date()) return false;
+
     const products = document.querySelectorAll('.product-entry');
-    const total = parseFloat(document.getElementById('order-total-amount').textContent.replace('KES ', '')) || 0;
+    if (!products.length) return false;
 
-    const isValid = customer && dateOfEvent && status &&
-        products.length > 0 && total > 0;
+    let hasValidProduct = false;
+    products.forEach(entry => {
+        const productId = entry.querySelector('.product-select').value;
+        const quantity = parseInt(entry.querySelector('.product-quantity').value);
+        const price = parseFloat(entry.querySelector('.product-price').value);
 
-    const submitButton = form.querySelector('button[type="submit"]');
-    submitButton.disabled = !isValid;
+        if (productId && quantity > 0 && price >= 0) {
+            hasValidProduct = true;
+        }
+    });
 
-    return isValid;
+    return hasValidProduct;
 }

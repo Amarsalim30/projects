@@ -1,10 +1,19 @@
 import { customerBaseUrl } from '../../modules/apiConstants.js';
 import { debounce, showLoadingSpinner, hideLoadingSpinner } from '../../modules/utility.js';
-import { updateCustomerList } from '../sections/customers.js';
+import { updateCustomerList } from './customers.js';
 
 export function initializeCustomerSearch() {
   let searchCustomerController;
   const searchCache = new Map();
+  const MAX_CACHE_SIZE = 100;
+  
+  function cleanupCache() {
+    if (searchCache.size > MAX_CACHE_SIZE) {
+      const oldestKey = searchCache.keys().next().value;
+      searchCache.delete(oldestKey);
+    }
+  }
+
   const searchCustomerInput = document.querySelector("#search-customer");
   if (!searchCustomerInput) return;
 
@@ -34,6 +43,7 @@ export function initializeCustomerSearch() {
 
       const data = await response.json();
       searchCache.set(searchValue, data);
+      cleanupCache(); // Clean up cache if it exceeds size limit
       updateCustomerList(data);
     } catch (error) {
       if (error.name !== "AbortError") {

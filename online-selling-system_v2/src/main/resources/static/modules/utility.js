@@ -30,13 +30,15 @@ function debounce(func, delay) {
     };
   }
   
-    // Show loading spinner
-    function showLoadingSpinner() {
+// Add error boundaries
+function showLoadingSpinner() {
+  try {
       const spinner = document.getElementById("loading-spinner");
-      if (spinner) {
-        spinner.style.display = "block";
-      }
-    }
+      if (spinner) spinner.style.display = "block";
+  } catch (error) {
+      console.error('Loading spinner error:', error);
+  }
+}
   
     // Hide loading spinner
     function hideLoadingSpinner() {

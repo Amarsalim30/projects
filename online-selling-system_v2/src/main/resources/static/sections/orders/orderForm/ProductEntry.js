@@ -1,7 +1,7 @@
 import { updateOrderTotal, updateProductSubtotal } from './orderPrice.js';
 import { debounce } from '../../../modules/utility.js';
 import fetchController from '../../../modules/fetchController.js';
-import {productBaseUrl } from '../../../modules/apiConstants.js'
+import { productBaseUrl } from '../../../modules/apiConstants.js'
 
 export function initializeAddProductToOrder() {
     //when add product button is clicked, create a product entry and append it to the product selection
@@ -68,59 +68,79 @@ export function initializeAddProductToOrder() {
   
   function initializeSelectProduct(container) {
     const select = container.querySelector(".product-select");
+    if (!select) return;
+
+    // Ensure proper cleanup of existing instances
+    if ($(select).data('select2')) {
+        $(select).select2('destroy');
+    }
+
+    let currentRequest = null;
     const debouncedSearch = debounce(async (searchTerm, success, failure) => {
+        if (currentRequest) {
+            currentRequest.abort();
+        }
+        currentRequest = new AbortController();
+        
         try {
             const data = await fetchController.fetch(
                 'productSearch',
-                `${productBaseUrl}?searchTerm=${searchTerm}`
+                `${productBaseUrl}?searchTerm=${searchTerm}`,
+                { signal: currentRequest.signal }
             );
             success(data);
         } catch (error) {
+            if (error.name === 'AbortError') return;
             failure('Failed to fetch products');
+        } finally {
+            currentRequest = null;
         }
     }, 300);
-    
-    $(select).select2({
-        placeholder: "Select a product",
-        allowClear: true,
-        minimumInputLength: 1,
-        dropdownParent: $('#add-order-sidebar'),
-        ajax: {
-            transport: (params, success, failure) => 
-                debouncedSearch(params.data.searchTerm, success, failure),
-            delay: 0, // We're handling delay with debounce
-            data: (params) => ({ searchTerm: params.term }),
-            processResults: (data) => ({
-                results: data.map(product => ({
-                    id: product.id,
-                    text: product.name || `Product ${product.id}`
-                }))
-            }),
-            cache: true
-        }
-    }).on('select2:open', function() {
-        document.querySelector('.select2-search__field').focus();
-    }).on('select2:select', async (e) => {
-        e.stopPropagation();
-        const productId = e.params.data.id;
-        const entry = e.target.closest('.product-entry');
-        if (!entry) return;
 
-        try {
-            const product = await fetchController.fetch(
-                'productDetails',
-                `${productBaseUrl}/${productId}`
-            );
-            if (product?.price) {
-                entry.querySelector('.product-price').value = product.price;
-                updateProductSubtotal(entry);
-                updateOrderTotal();
+    try {
+        $(select).select2({
+            placeholder: "Select a product",
+            allowClear: true,
+            minimumInputLength: 1,
+            dropdownParent: $('#add-order-sidebar'),
+            ajax: {
+                transport: (params, success, failure) => 
+                    debouncedSearch(params.data.searchTerm, success, failure),
+                delay: 0,
+                data: params => ({ searchTerm: params.term }),
+                processResults: data => ({
+                    results: data.map(product => ({
+                        id: product.id,
+                        text: product.name || `Product ${product.id}`
+                    }))
+                }),
+                cache: true
             }
-        } catch (error) {
-            console.error("Error fetching product:", error);
-            alert("Failed to fetch product details");
-        }
-    });
+        }).on('select2:open', function() {
+            requestAnimationFrame(() => {
+                document.querySelector('.select2-search__field')?.focus();
+            });
+        }).on('select2:select', async (e) => {
+            try {
+                const productId = e.params.data.id;
+                const product = await fetchController.fetch(
+                    'productDetails',
+                    `${productBaseUrl}/${productId}`
+                );
+                if (product?.price) {
+                    container.querySelector('.product-price').value = product.price;
+                    updateProductSubtotal(container);
+                    updateOrderTotal();
+                }
+            } catch (error) {
+                console.error("Error fetching product details:", error);
+                alert("Failed to fetch product details");
+            }
+        });
+    } catch (error) {
+        console.error('Error initializing Select2:', error);
+        alert('Error initializing product selector');
+    }
 
     // Add loading indicator
     select.insertAdjacentHTML('afterend', '<div class="select-loading" style="display:none">Loading...</div>');
@@ -134,8 +154,23 @@ export function initializeAddProductToOrder() {
     const priceInput = container.querySelector('.product-price');
     priceInput.addEventListener('input', (e) => {
         const value = parseFloat(e.target.value);
-        if (value < 0) {
+        if (isNaN(value) || value < 0) {
             e.target.value = 0;
+        } else if (value > 1000000) { // Reasonable maximum price
+            e.target.value = 1000000;
+        }
+        updateProductSubtotal(container);
+        updateOrderTotal();
+    });
+
+    // Add validation for quantity input
+    const quantityInput = container.querySelector('.product-quantity');
+    quantityInput.addEventListener('input', (e) => {
+        const value = parseInt(e.target.value);
+        if (isNaN(value) || value < 1) {
+            e.target.value = 1;
+        } else if (value > 10000) { // Reasonable maximum quantity
+            e.target.value = 10000;
         }
         updateProductSubtotal(container);
         updateOrderTotal();
@@ -187,6 +222,7 @@ const initializeProductSelectDeleteListener = () => {
                     }
                     productEntry.remove();
                     updateOrderTotal();
+      
                 }, 300);
             }
         }
@@ -208,14 +244,39 @@ const initializeProductSelectDeleteListener = () => {
 // Export the initialization function
 export { initializeProductSelectDeleteListener };
 
-// Add cleanup function for proper memory management
+// Improved cleanup function
 export function cleanup() {
-    const productEntries = document.querySelectorAll('.product-entry');
-    productEntries.forEach(entry => {
-        const select = entry.querySelector('.product-select');
-        if ($(select).data('select2')) {
-            $(select).select2('destroy');
+    try {
+        document.querySelectorAll('.product-select').forEach(select => {
+            if ($(select).data('select2')) {
+                $(select).select2('destroy');
+            }
+        });
+        // Clear any pending requests
+        if (window.currentProductRequest) {
+            window.currentProductRequest.abort();
         }
+    } catch (error) {
+        console.error('Error during cleanup:', error);
+    }
+}
+
+export const initializeProductSelect = (select, products) => {
+    if (!select) return;
+
+    // Safely destroy existing Select2 instance if it exists
+    if ($(select).data('select2')) {
+        $(select).select2('destroy');
+    }
+
+    $(select).select2({
+        data: products.map(product => ({
+            id: product.id,
+            text: `${product.name} (${product.stock} available)`,
+            product: product
+        })),
+        placeholder: 'Select a product',
+        width: '100%'
     });
 }
 

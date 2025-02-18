@@ -5,6 +5,19 @@ import fetchController from "../../modules/fetchController.js";
 
 /* --------------- Customer Section ----------------- */
 
+async function checkExistingNumber(phoneNumber) {
+  try {
+    const response = await fetchController.fetch(
+      'checkNumber', 
+      `${customerBaseUrl}/check-number?number=${encodeURIComponent(phoneNumber)}`
+    );
+    return response.exists;
+  } catch (error) {
+    console.error("Check number error:", error);
+    throw new Error("Failed to check phone number");
+  }
+}
+
 async function createCustomer(event) {
     event.preventDefault();
     const form = document.querySelector("#add-customer-form");
@@ -25,8 +38,17 @@ async function createCustomer(event) {
       phoneInput.reportValidity();
       return;
     }
-    
+
     try {
+      // Check for duplicate number
+      const formattedNumber = '+' + cleanedNumber;
+      const exists = await checkExistingNumber(formattedNumber);
+      if (exists) {
+        phoneInput.setCustomValidity('This phone number is already registered');
+        phoneInput.reportValidity();
+        return;
+      }
+
       const response = await fetchController.fetch('createCustomer', `${customerBaseUrl}/new`, {
         method: "POST",
         headers: { 
@@ -35,7 +57,7 @@ async function createCustomer(event) {
         },
         body: JSON.stringify({
           name: nameInput.value.trim(),
-          number: '+' + cleanedNumber
+          number: formattedNumber
         }),
       });
       

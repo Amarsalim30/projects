@@ -126,4 +126,10 @@ public class CustomerController {
 
         return ResponseEntity.ok(customers);
     }
+
+    @GetMapping("/check-number")
+    public ResponseEntity<Boolean> checkCustomerNumberExists(@RequestParam String number) {
+        boolean exists = customerService.existsByNumber(number);
+        return ResponseEntity.ok(exists);
+    }
 }
