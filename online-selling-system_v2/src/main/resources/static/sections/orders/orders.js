@@ -1,7 +1,7 @@
 
-import { orderBaseUrl, productBaseUrl } from '../modules/constants.js';
-import { productSelection, orderListBody } from '../modules/domCaching.js';
-import { hideSidebars } from '../modules/navigation.js';
+import { orderBaseUrl, productBaseUrl } from '../../modules/apiConstants.js';
+import { productSelection, orderListBody } from '../../modules/domCaching.js';
+import { hideSidebars } from '../../modules/navigation.js';
 /* --------------- Order Section ----------------- */
 // Create order >Select Customer> Add product entry >Fill product details 
 // >Date of event >Status >Submit

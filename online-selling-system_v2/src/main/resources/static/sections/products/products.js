@@ -1,5 +1,5 @@
-import { productBaseUrl } from "../modules/constants.js";
-import{productListBody} from "../modules/domCaching.js";
+import { productBaseUrl } from "../../modules/apiConstants.js";
+import{productListBody} from "../../modules/domCaching.js";
 // Fetch products and update the product list UI
 async function fetchAndRenderProducts() {
     try {

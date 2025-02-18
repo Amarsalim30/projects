@@ -1,4 +1,4 @@
-import { orderBaseUrl } from '../modules/constants.js';
+import { orderBaseUrl } from '../modules/apiConstants.js';
 import { showLoadingSpinner, hideLoadingSpinner, debounce } from '../modules/utility.js';
 import { getStatusColor } from '../modules/status.js';
 

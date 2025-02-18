@@ -1,5 +1,5 @@
-import { customerBaseUrl } from './constants.js';
-import { debounce, showLoadingSpinner, hideLoadingSpinner } from './utility.js';
+import { customerBaseUrl } from '../../modules/apiConstants.js';
+import { debounce, showLoadingSpinner, hideLoadingSpinner } from '../../modules/utility.js';
 import { updateCustomerList } from '../sections/customers.js';
 
 export function initializeCustomerSearch() {

@@ -3,7 +3,6 @@ package com.example.online_selling_system_v2.Model;
 import java.util.ArrayList;
 import java.util.List;
 
-import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -36,7 +35,6 @@ public class Product {
 
     private int stock;
     
-    @Column(name="type")
     @Enumerated(EnumType.STRING)  // This ensures the enum is stored as a string in the database
     private Type type;
 
