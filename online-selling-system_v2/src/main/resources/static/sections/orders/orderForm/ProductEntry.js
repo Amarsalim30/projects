@@ -16,7 +16,7 @@ export function initializeAddProductToOrder() {
     }, 300));
   }
   
-  function createProductEntry() {
+  export function createProductEntry() {
     const productDiv = document.createElement("div");
     productDiv.classList.add("product-entry");
     productDiv.innerHTML = `
@@ -66,7 +66,7 @@ export function initializeAddProductToOrder() {
     return productDiv;
   }
   
-  function initializeSelectProduct(container) {
+  export function initializeSelectProduct(container) {
     const select = container.querySelector(".product-select");
     if (!select) return;
 

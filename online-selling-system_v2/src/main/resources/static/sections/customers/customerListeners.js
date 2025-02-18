@@ -1,4 +1,5 @@
 import{ createCustomer, deleteCustomer } from '../customers/customers.js';
+import { customerListBody } from '../../modules/domCaching.js';
 export const initializeCustomerFormListener = () => {
     document.querySelector("#add-customer-form").addEventListener("submit", createCustomer);
 }
