@@ -4,19 +4,18 @@ import fetchController from '../../../modules/fetchController.js';
 import { productBaseUrl } from '../../../modules/apiConstants.js'
 
 export function initializeAddProductToOrder() {
-    //when add product button is clicked, create a product entry and append it to the product selection
     const addProductButton = document.getElementById("add-product");
     const productSelection = document.querySelector("#product-selection");
   
     addProductButton.addEventListener("click", debounce(() => {
-      const productDiv = createProductEntry();
-      productSelection.appendChild(productDiv);
-      initializeSelectProduct(productDiv);
-      initializeRemoveProduct(productDiv);
+        const productDiv = createProductEntry();
+        productSelection.appendChild(productDiv);
+        initializeSelectProduct(productDiv);
+        initializeRemoveProduct(productDiv);
     }, 300));
-  }
-  
-  export function createProductEntry() {
+}
+
+export function createProductEntry() {
     const productDiv = document.createElement("div");
     productDiv.classList.add("product-entry");
     productDiv.innerHTML = `
@@ -64,9 +63,9 @@ export function initializeAddProductToOrder() {
     });
 
     return productDiv;
-  }
-  
-  export function initializeSelectProduct(container) {
+}
+
+export function initializeSelectProduct(container) {
     const select = container.querySelector(".product-select");
     if (!select) return;
 
@@ -85,7 +84,7 @@ export function initializeAddProductToOrder() {
         try {
             const data = await fetchController.fetch(
                 'productSearch',
-                `${productBaseUrl}?searchTerm=${searchTerm}`,
+                `${productBaseUrl}/search?searchTerm=${searchTerm}`,
                 { signal: currentRequest.signal }
             );
             success(data);
@@ -185,66 +184,32 @@ export function initializeAddProductToOrder() {
     });
 }
 
-function initializeRemoveProduct(productDiv) {
+export function initializeRemoveProduct(productDiv) {
     const removeButton = productDiv.querySelector('.remove-product');
-    removeButton.addEventListener('click', () => {
-        productDiv.remove();
-        updateOrderTotal();
-    });
-}
+    removeButton.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
 
-
-/*---------------Product Entry Delete Listener------------------------------*/
-// Use event delegation for dynamically added "Remove" buttons
-const initializeProductSelectDeleteListener = () => {
-    document.addEventListener('click', (event) => {
-        if (event.target.classList.contains('remove-product') ||
-            event.target.closest('.remove-product')) {
-            event.preventDefault();
-            event.stopPropagation();
-
-            const productEntry = event.target.closest('.product-entry');
-            if (productEntry) {
-                if (document.querySelectorAll('.product-entry').length === 1) {
-                    alert('At least one product is required');
-                    return;
-                }
-
-                // Smooth removal animation
-                productEntry.style.opacity = '0';
-                productEntry.style.transform = 'translateX(20px)';
-
-                setTimeout(() => {
-                    // Cleanup Select2 instance before removing element
-                    const select = productEntry.querySelector('.product-select');
-                    if ($(select).data('select2')) {
-                        $(select).select2('destroy');
-                    }
-                    productEntry.remove();
-                    updateOrderTotal();
-      
-                }, 300);
-            }
+        if (document.querySelectorAll('.product-entry').length === 1) {
+            alert('At least one product is required');
+            return;
         }
-    });
 
-    // Listen for quantity changes
-    document.addEventListener('input', (event) => {
-        if (event.target.classList.contains('product-quantity')) {
-            const quantity = parseInt(event.target.value) || 0;
-            if (quantity < 1) {
-                event.target.value = 1;
+        // Animate and remove
+        productDiv.style.opacity = '0';
+        productDiv.style.transform = 'translateX(20px)';
+
+        setTimeout(() => {
+            const select = productDiv.querySelector('.product-select');
+            if ($(select).data('select2')) {
+                $(select).select2('destroy');
             }
-            updateProductSubtotal(event.target.closest('.product-entry'));
+            productDiv.remove();
             updateOrderTotal();
-        }
+        }, 300);
     });
 }
 
-// Export the initialization function
-export { initializeProductSelectDeleteListener };
-
-// Improved cleanup function
 export function cleanup() {
     try {
         document.querySelectorAll('.product-select').forEach(select => {
@@ -261,7 +226,7 @@ export function cleanup() {
     }
 }
 
-export const initializeProductSelect = (select, products) => {
+export function initializeStaticProductSelect(select, products) {
     if (!select) return;
 
     // Safely destroy existing Select2 instance if it exists
@@ -276,7 +241,8 @@ export const initializeProductSelect = (select, products) => {
             product: product
         })),
         placeholder: 'Select a product',
-        width: '100%'
+        width: '100%',
+        dropdownParent: $('#add-order-sidebar')
     });
 }
 

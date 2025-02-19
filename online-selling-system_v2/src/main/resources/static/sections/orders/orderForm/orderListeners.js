@@ -5,25 +5,11 @@ import { validateOrderForm } from "./orderValidation.js";
 
 const initializeOrderFormListener = () => {
     const form = document.querySelector("#add-order-form");
-    const addProductBtn = document.querySelector("#add-product");
 
     if (form) {
         form.addEventListener("submit", (e) => {
             e.preventDefault();
             createOrder(e);
-        });
-    }
-
-    if (addProductBtn) {
-        addProductBtn.addEventListener("click", (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            const productSelection = document.querySelector("#product-selection");
-            if (productSelection) {
-                const productDiv = createProductEntry();
-                productSelection.appendChild(productDiv);
-                initializeSelectProduct(productDiv);
-            }
         });
     }
 }

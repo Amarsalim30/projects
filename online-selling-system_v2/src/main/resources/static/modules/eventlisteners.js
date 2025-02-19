@@ -5,9 +5,7 @@ import {
     initializeOrderStatusUpdateListener 
 } from '../sections/orders/orderForm/orderListeners.js';
 import { 
-    initializeAddProductToOrder,
-    initializeProductSelectDeleteListener,
-    cleanup 
+    initializeAddProductToOrder
 } from '../sections/orders/orderForm/ProductEntry.js';
 import {
     initializeSelectCustomer
@@ -38,7 +36,6 @@ const initializeOrderSectionEventListeners=()=>{
     initializeOrderFormValidation();  // Added parentheses
     initializeOrderStatusUpdateListener();  // Added parentheses
     initializeAddProductToOrder();
-    initializeProductSelectDeleteListener();
 }
 
 

@@ -1251,3 +1251,71 @@ button[type="submit"]:disabled {
   }
   
 }
+
+/* Phone Input Styles */
+.phone-input-group {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    margin: 5px 0;
+    font-family: monospace; /* Use monospace for better number spacing */
+}
+
+.country-code {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 12px;
+    background-color: #f8f9fa;
+    border: 1px solid #ddd;
+    border-right: none;
+    border-radius: var(--border-radius) 0 0 var(--border-radius);
+    font-size: 14px;
+    color: #495057;
+    white-space: nowrap;
+    font-family: monospace;
+    letter-spacing: 1px;
+}
+
+.phone-input-group input[type="tel"] {
+    border-left: none;
+    border-radius: 0 var(--border-radius) var(--border-radius) 0;
+    margin: 0;
+    flex: 1;
+    font-family: monospace;
+    letter-spacing: 1px;
+    font-size: 14px;
+}
+
+.phone-input-group input[type="tel"].invalid {
+    border-color: var(--danger-color);
+    background-color: rgba(231, 76, 60, 0.05);
+}
+
+.phone-input-group input[type="tel"]:focus {
+    border-color: var(--secondary-color);
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+}
+
+.phone-input-group input[type="tel"].invalid:focus {
+    border-color: var(--danger-color);
+    box-shadow: 0 0 0 2px rgba(231, 76, 60, 0.2);
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+    .phone-input-group {
+        font-size: 16px;
+        box-sizing: border-box;
+    }
+    
+    .country-code {
+        padding: 12px;
+    }
+
+    .phone-input-group input[type="tel"] {
+        font-size: 16px;
+        padding: 12px;
+    }
+}

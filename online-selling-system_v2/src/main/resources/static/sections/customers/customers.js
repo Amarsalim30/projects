@@ -2,6 +2,7 @@ import { customerBaseUrl } from "../../modules/apiConstants.js";
 import { customerListBody } from "../../modules/domCaching.js";
 import { hideSidebars } from "../../modules/navigation.js";
 import fetchController from "../../modules/fetchController.js";
+import { PHONE_CONFIG } from './phone-input.js';
 
 /* --------------- Customer Section ----------------- */
 
@@ -32,17 +33,18 @@ async function createCustomer(event) {
     }
 
     // Validate and clean phone number
-    const cleanedNumber = phoneInput.value.replace(/\D/g, '');
-    if (cleanedNumber.length !== 12 || !cleanedNumber.startsWith('254')) {
-      phoneInput.setCustomValidity('Enter valid number: +254 XXX XXX XXX');
-      phoneInput.reportValidity();
-      return;
+    const cleanedNumber = PHONE_CONFIG.cleanNumber(phoneInput.value);
+    const fullNumber = `+254${cleanedNumber}`; // Don't add space after country code
+    
+    if (!PHONE_CONFIG.isValidNumber(cleanedNumber)) {
+        phoneInput.setCustomValidity(PHONE_CONFIG.ERROR_MESSAGE);
+        phoneInput.reportValidity();
+        return;
     }
 
     try {
       // Check for duplicate number
-      const formattedNumber = '+' + cleanedNumber;
-      const exists = await checkExistingNumber(formattedNumber);
+      const exists = await checkExistingNumber(fullNumber);
       if (exists) {
         phoneInput.setCustomValidity('This phone number is already registered');
         phoneInput.reportValidity();
@@ -57,7 +59,7 @@ async function createCustomer(event) {
         },
         body: JSON.stringify({
           name: nameInput.value.trim(),
-          number: formattedNumber
+          number: fullNumber
         }),
       });
       
@@ -111,12 +113,11 @@ async function updateCustomerList(customers) {
 
   // Render customer rows
   customers.forEach((customer) => {
-    if (!customer || !customer.number) return;
+    if (!customer?.number) return;
     
-    const number = customer.number.replace(/\D/g, '');
-    const displayNumber = number.length >= 12 
-      ? `+254 ${number.substring(3).match(/.{1,3}/g).join(' ')}`
-      : customer.number; // Fallback to original if format is unexpected
+    // Remove any extra country code before formatting
+    const number = customer.number.replace(/^\+?254/, '');
+    const displayNumber = PHONE_CONFIG.formatFullNumber(number);
     
     const row = document.createElement("tr");
     row.innerHTML = `
