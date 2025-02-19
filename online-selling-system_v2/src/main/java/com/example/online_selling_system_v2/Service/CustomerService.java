@@ -113,6 +113,16 @@ public class CustomerService {
 
     public boolean existsByNumber(String number) {
         logger.info("Checking if customer exists by number: {}", number);
-        return customerRepository.existsByNumber(number);
+        // Normalize the number by removing any formatting
+        String normalizedNumber = number.replaceAll("[^0-9]", "");
+        
+        // If it starts with 254, that's fine, otherwise prepend it
+        if (!normalizedNumber.startsWith("254")) {
+            normalizedNumber = "254" + normalizedNumber;
+        }
+        
+        // Check both formatted and unformatted versions
+        return customerRepository.existsByNumber(normalizedNumber) ||
+               customerRepository.existsByNumber("+" + normalizedNumber);
     }
 }

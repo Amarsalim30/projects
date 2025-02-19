@@ -7,16 +7,21 @@ import { PHONE_CONFIG } from './phone-input.js';
 /* --------------- Customer Section ----------------- */
 
 async function checkExistingNumber(phoneNumber) {
-  try {
-    const response = await fetchController.fetch(
-      'checkNumber', 
-      `${customerBaseUrl}/check-number?number=${encodeURIComponent(phoneNumber)}`
-    );
-    return response.exists;
-  } catch (error) {
-    console.error("Check number error:", error);
-    throw new Error("Failed to check phone number");
-  }
+    try {
+        // Encode the number properly for URL
+        const encodedNumber = encodeURIComponent(phoneNumber);
+        
+        const response = await fetchController.fetch(
+            'checkNumber',
+            `${customerBaseUrl}/check-number?number=${encodedNumber}`,
+            { method: 'GET' }
+        );
+        
+        return response === true;
+    } catch (error) {
+        console.error('Error checking phone number:', error);
+        return false;
+    }
 }
 
 async function createCustomer(event) {
@@ -32,6 +37,12 @@ async function createCustomer(event) {
       return;
     }
 
+        // User input: "712345678"
+    // const cleanedNumber = PHONE_CONFIG.cleanNumber(phoneInput.value);
+        // cleanedNumber = "712345678"
+    // const fullNumber = `+254${cleanedNumber}`;
+        // fullNumber = "+254712345678"
+        
     // Validate and clean phone number
     const cleanedNumber = PHONE_CONFIG.cleanNumber(phoneInput.value);
     const fullNumber = `+254${cleanedNumber}`; // Don't add space after country code
@@ -43,12 +54,15 @@ async function createCustomer(event) {
     }
 
     try {
-      // Check for duplicate number
+      // Add logging to debug the number being checked
+      console.log('Checking number:', fullNumber);
       const exists = await checkExistingNumber(fullNumber);
+      console.log('Number exists?', exists);
+      
       if (exists) {
         phoneInput.setCustomValidity('This phone number is already registered');
         phoneInput.reportValidity();
-        return;
+        return alert("This phone number is already registered");
       }
 
       const response = await fetchController.fetch('createCustomer', `${customerBaseUrl}/new`, {
@@ -88,17 +102,55 @@ async function fetchCustomers(url = customerBaseUrl) {
 
 async function deleteCustomer(customerId) {
   try {
+    // Check if customer exists and has orders
+    const customer = await fetchController.fetch(
+      'getCustomer',
+      `${customerBaseUrl}/id/${customerId}`
+    );
+    
+    if (!customer) {
+      throw new Error('Customer not found');
+    }
+
+    // Confirm deletion based on order count
+    const confirmMessage = customer.orderCount > 0
+      ? `This customer has ${customer.orderCount} orders. Are you sure you want to delete?`
+      : 'Are you sure you want to delete this customer?';
+    
+    if (!confirm(confirmMessage)) {
+      return;
+    }
+
+    // Attempt deletion
     const deleted = await fetchController.fetch(
       'deleteCustomer',
       `${customerBaseUrl}/${encodeURIComponent(customerId)}`,
       { method: "DELETE" }
     );
-    if (deleted !== null) {
+
+    if (deleted) {
       await fetchCustomers();
     }
   } catch (error) {
-    console.error("Delete customer error:", error);
-    alert("Error deleting customer: " + error.message);
+    console.error(`Error deleting customer ${customerId}:`, error);
+    
+    const errorMessages = {
+      'foreign key constraint': "Unable to delete: Customer has associated orders that must be deleted first",
+      'not found': "Customer not found. The list will be refreshed.",
+      'default': "Failed to delete customer. Please try again or contact support if the problem persists."
+    };
+
+    const message = error.status === 404
+      ? errorMessages['not found']
+      : error.message?.toLowerCase().includes('foreign key')
+        ? errorMessages['foreign key constraint']
+        : errorMessages['default'];
+
+    alert(message);
+    
+    if (error.status === 404) {
+      await fetchCustomers();
+    }
   }
 }
 

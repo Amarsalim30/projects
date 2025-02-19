@@ -128,8 +128,13 @@ public class CustomerController {
     }
 
     @GetMapping("/check-number")
-    public ResponseEntity<Boolean> checkCustomerNumberExists(@RequestParam String number) {
-        boolean exists = customerService.existsByNumber(number);
+    public ResponseEntity<Boolean> checkNumberExists(@RequestParam String number) {
+        // Clean the number before checking
+        String cleanedNumber = number.replace("+", "")
+                                .replace(" ", "")
+                                .replaceAll("^\"|\"$", ""); // Remove quotes if present
+    
+        boolean exists = customerService.existsByNumber(cleanedNumber);
         return ResponseEntity.ok(exists);
     }
 }
