@@ -1,23 +1,24 @@
 package com.example.online_selling_system_v2.Event;
 
-import com.example.online_selling_system_v2.Model.Order;
-import org.springframework.context.ApplicationEvent;
+import com.example.online_selling_system_v2.Model.Order.Order;
 
-public class OrderEvent extends ApplicationEvent {
+import lombok.Getter;
+
+@Getter
+public class OrderEvent {
+    public enum EventType {
+        CREATED,
+        UPDATED,
+        STATUS_CHANGED,
+        PAYMENT_UPDATED,
+        CANCELLED
+    }
+
     private final Order order;
-    private final String eventType;
+    private final EventType eventType;
 
-    public OrderEvent(Object source, Order order, String eventType) {
-        super(source);
+    public OrderEvent(Order order, EventType eventType) {
         this.order = order;
         this.eventType = eventType;
-    }
-
-    public Order getOrder() {
-        return order;
-    }
-
-    public String getEventType() {
-        return eventType;
     }
 }

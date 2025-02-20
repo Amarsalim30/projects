@@ -3,6 +3,8 @@ package com.example.online_selling_system_v2.Model;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.example.online_selling_system_v2.Model.Order.Order;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;

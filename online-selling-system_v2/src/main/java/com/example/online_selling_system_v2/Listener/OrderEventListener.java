@@ -12,11 +12,30 @@ public class OrderEventListener {
 
     @EventListener
     public void handleOrderEvent(OrderEvent event) {
-        if (event == null) {
-            logger.warn("Received null order event");
+        if (event == null || event.getOrder() == null) {
+            logger.warn("Received invalid order event");
             return;
         }
-        logger.info("Received order event: {} for order: {}", event.getEventType(), event.getOrder());
-        // Handle the event (e.g., send notifications, update status, etc.)
+        
+        logger.info("Processing {} event for order ID: {}", 
+            event.getEventType(), 
+            event.getOrder().getId());
+            
+        switch (event.getEventType()) {
+            case CREATED:
+                // Handle order creation
+                break;
+            case STATUS_CHANGED:
+                // Handle status change
+                break;
+            case PAYMENT_UPDATED:
+                // Handle payment update
+                break;
+            case CANCELLED:
+                // Handle cancellation
+                break;
+            default:
+                logger.warn("Unhandled event type: {}", event.getEventType());
+        }
     }
 }

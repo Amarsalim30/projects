@@ -1,4 +1,4 @@
-import { orderBaseUrl, productBaseUrl } from '../../modules/apiConstants.js';
+import { orderBaseUrl } from '../../modules/apiConstants.js';
 import { productSelection, orderListBody } from '../../modules/domCaching.js';
 import { hideSidebars } from '../../modules/navigation.js';
 import { validateOrderForm } from './orderForm/orderValidation.js';
@@ -10,8 +10,9 @@ import { validateOrderForm } from './orderForm/orderValidation.js';
 async function createOrder(event) {
     event.preventDefault();
     
-    if (!validateOrderForm()) {
-        alert("Please fill all required fields correctly");
+    const validationResult = validateOrderForm();
+    if (!validationResult.isValid) {
+        alert(validationResult.errors.join('\n'));
         return;
     }
 
@@ -20,56 +21,22 @@ async function createOrder(event) {
     submitButton.disabled = true;
     submitButton.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Creating...';
 
-    const form = document.querySelector("#add-order-form");
-    const formData = new FormData(form);
-    const customerID = parseInt(formData.get("select-customer"));
-    
-    // Validate customer
-    if (!customerID) {
-        alert("Please select a customer");
-        submitButton.disabled = false;
-        submitButton.innerHTML = 'Create Order';
-        return;
-    }
-
-    // Validate products
-    const products = [];
-    let hasValidProducts = false;
-    document.querySelectorAll(".product-entry").forEach((entry) => {
-        const productId = entry.querySelector(".product-select").value;
-        const quantity = parseInt(entry.querySelector(".product-quantity").value);
-        const price = parseFloat(entry.querySelector(".product-price").value);
-
-        if (productId && quantity > 0 && price >= 0) {
-            hasValidProducts = true;
-            products.push({ productId, quantity, price });
-        }
-    });
-
-    if (!hasValidProducts) {
-        alert("Please add at least one valid product");
-        submitButton.disabled = false;
-        submitButton.innerHTML = 'Create Order';
-        return;
-    }
-
-    // Validate date
-    const dateOfEvent = formData.get("date-of-event");
-    if (!dateOfEvent || new Date(dateOfEvent) < new Date()) {
-        alert("Please select a valid future date");
-        submitButton.disabled = false;
-        submitButton.innerHTML = 'Create Order';
-        return;
-    }
-
-    const newOrder = {
-        customerId: customerID,
-        dateOfEvent: dateOfEvent,
-        status: formData.get("status"),
-        products: products,
-    };
-
     try {
+        // Simplified order creation with form data
+        const formData = new FormData(event.target);
+        const newOrder = {
+            customerId: parseInt(formData.get("select-customer")),
+            dateOfEvent: formData.get("date-of-event"),
+            status: formData.get("status"),
+            products: Array.from(document.querySelectorAll(".product-entry"))
+                .map(entry => ({
+                    productId: entry.querySelector(".product-select").value,
+                    quantity: parseInt(entry.querySelector(".product-quantity").value),
+                    price: parseFloat(entry.querySelector(".product-price").value)
+                }))
+                .filter(product => product.productId && product.quantity > 0 && product.price >= 0)
+        };
+
         const response = await Promise.race([
             fetch(`${orderBaseUrl}/new`, {
                 method: "POST",
@@ -86,8 +53,7 @@ async function createOrder(event) {
             throw new Error(error.message || "Failed to create order");
         }
 
-        // Reset form and update UI
-        form.reset();
+        event.target.reset();
         productSelection.innerHTML = '';
         hideSidebars();
         await fetchOrders();
