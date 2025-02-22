@@ -37,6 +37,12 @@ public class ProductService {
     }
 
     public Product getProductById(Long id) {
-        return productRepository.findById(id).orElse(null);
+        return productRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
+    }
+
+    public boolean existsById(Long productId) {
+        return productRepository.existsById(productId);
     }
 }
+

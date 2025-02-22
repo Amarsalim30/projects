@@ -31,13 +31,11 @@ public class Product {
     
     private String name;
 
-    //private String details;
-
     private double price;
 
     private int stock;
     
-    @Enumerated(EnumType.STRING)  // This ensures the enum is stored as a string in the database
+    @Enumerated(EnumType.STRING)
     private Type type;
 
     public enum Type {
@@ -45,7 +43,6 @@ public class Product {
         FURNITURE,
         CLOTHING,
         FOOD,
-        // Add more types as necessary
     }
 
     @ManyToMany
@@ -55,5 +52,4 @@ public class Product {
         inverseJoinColumns = @JoinColumn(name = "order_id")
     )
     private List<Order> orders = new ArrayList<>();
-
 }

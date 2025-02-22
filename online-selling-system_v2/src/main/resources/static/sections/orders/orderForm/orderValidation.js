@@ -1,16 +1,21 @@
 const ValidationRules = {
     customer: {
-        validate: (value) => !!value,
-        message: 'Please select a customer',
+        validate: (value) => {
+            const customerId = parseInt(value);
+            return !isNaN(customerId) && customerId > 0;
+        },
+        message: 'Customer selection is required',
         selector: '#select-customer'
     },
     date: {
         validate: (value) => {
+            if (!value) return false;
+            const selectedDate = new Date(value);
             const today = new Date();
             today.setHours(0, 0, 0, 0);
-            return value && new Date(value) >= today;
+            return selectedDate >= today;
         },
-        message: 'Please select a future date',
+        message: 'Please select a valid future date',
         selector: '#date-of-event'
     },
     products: {

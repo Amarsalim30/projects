@@ -69,88 +69,105 @@ export function initializeSelectProduct(container) {
     const select = container.querySelector(".product-select");
     if (!select) return;
 
-    // Ensure proper cleanup of existing instances
-    if ($(select).data('select2')) {
-        $(select).select2('destroy');
-    }
-
-    let currentRequest = null;
-    const debouncedSearch = debounce(async (searchTerm, success, failure) => {
-        if (currentRequest) {
-            currentRequest.abort();
-        }
-        currentRequest = new AbortController();
-        
-        try {
-            const data = await fetchController.fetch(
-                'productSearch',
-                `${productBaseUrl}/search?searchTerm=${searchTerm}`,
-                { signal: currentRequest.signal }
-            );
-            success(data);
-        } catch (error) {
-            if (error.name === 'AbortError') return;
-            failure('Failed to fetch products');
-        } finally {
-            currentRequest = null;
-        }
-    }, 300);
+    const cleanup = cleanupSelect2Instance(select);
+    const controller = new AbortController();
 
     try {
-        $(select).select2({
-            placeholder: "Select a product",
-            allowClear: true,
-            minimumInputLength: 1,
-            dropdownParent: $('#add-order-sidebar'),
-            ajax: {
-                transport: (params, success, failure) => 
-                    debouncedSearch(params.data.searchTerm, success, failure),
-                delay: 0,
-                data: params => ({ searchTerm: params.term }),
-                processResults: data => ({
-                    results: data.map(product => ({
-                        id: product.id,
-                        text: product.name || `Product ${product.id}`
-                    }))
-                }),
-                cache: true
-            }
-        }).on('select2:open', function() {
-            requestAnimationFrame(() => {
-                document.querySelector('.select2-search__field')?.focus();
-            });
-        }).on('select2:select', async (e) => {
-            try {
-                const productId = e.params.data.id;
-                const product = await fetchController.fetch(
-                    'productDetails',
-                    `${productBaseUrl}/${productId}`
-                );
-                if (product?.price) {
-                    container.querySelector('.product-price').value = product.price;
-                    updateProductSubtotal(container);
-                    updateOrderTotal();
-                }
-            } catch (error) {
-                console.error("Error fetching product details:", error);
-                alert("Failed to fetch product details");
-            }
-        });
+        const instance = initializeSelect2WithErrorHandling(select, controller);
+        setupEventListeners(container, controller);
+        
+        return () => {
+            cleanup();
+            controller.abort();
+            if (instance?.destroy) instance.destroy();
+        };
     } catch (error) {
-        console.error('Error initializing Select2:', error);
-        alert('Error initializing product selector');
+        console.error('Error initializing product select:', error);
+        showErrorMessage(container, 'Failed to initialize product selector');
+        return () => {
+            cleanup();
+            controller.abort();
+        };
     }
+}
 
-    // Add loading indicator
-    select.insertAdjacentHTML('afterend', '<div class="select-loading" style="display:none">Loading...</div>');
-    
-    // Prevent event bubbling for the entire product entry
-    $(container).on('click', function(e) {
-        e.stopPropagation();
+function cleanupSelect2Instance(select) {
+    const instance = $(select).data('select2');
+    if (instance) {
+        $(select).off().select2('destroy');
+    }
+    return () => {
+        const newInstance = $(select).data('select2');
+        if (newInstance) $(select).off().select2('destroy');
+    };
+}
+
+function initializeSelect2WithErrorHandling(select, controller) {
+    const options = {
+        placeholder: "Select a product",
+        allowClear: true,
+        minimumInputLength: 1,
+        dropdownParent: $('#add-order-sidebar'),
+        ajax: createAjaxConfig(controller)
+    };
+
+    $(select)
+        .select2(options)
+        .on('select2:open', () => {
+            requestAnimationFrame(() => {
+                const searchField = document.querySelector('.select2-search__field');
+                if (searchField) searchField.focus();
+            });
+        });
+}
+
+function createAjaxConfig(controller) {
+    return {
+        transport: (params, success, failure) => {
+            const searchTerm = params.data.searchTerm;
+            if (controller.signal.aborted) return;
+            fetchController.fetch(
+                'productSearch',
+                `${productBaseUrl}/search?searchTerm=${searchTerm}`,
+                { signal: controller.signal }
+            ).then(success).catch(failure);
+        },
+        delay: 0,
+        data: params => ({ searchTerm: params.term }),
+        processResults: data => ({
+            results: data.map(product => ({
+                id: product.id,
+                text: product.name || `Product ${product.id}`
+            }))
+        }),
+        cache: true
+    };
+}
+
+function setupEventListeners(container, controller) {
+    const select = container.querySelector(".product-select");
+    const priceInput = container.querySelector('.product-price');
+    const quantityInput = container.querySelector('.product-quantity');
+
+    $(select).on('select2:select', async (e) => {
+        try {
+            const productId = e.params.data.id;
+            const product = await fetchController.fetch(
+                'productDetails',
+                `${productBaseUrl}/${productId}`,
+                { signal: controller.signal }
+            );
+            if (product?.price) {
+                priceInput.value = product.price;
+                updateProductSubtotal(container);
+                updateOrderTotal();
+            }
+        } catch (error) {
+            console.error("Error fetching product details:", error);
+            alert("Failed to fetch product details");
+        }
     });
 
-    // Add error handling for invalid price
-    const priceInput = container.querySelector('.product-price');
     priceInput.addEventListener('input', (e) => {
         const value = parseFloat(e.target.value);
         if (isNaN(value) || value < 0) {
@@ -162,8 +179,6 @@ export function initializeSelectProduct(container) {
         updateOrderTotal();
     });
 
-    // Add validation for quantity input
-    const quantityInput = container.querySelector('.product-quantity');
     quantityInput.addEventListener('input', (e) => {
         const value = parseInt(e.target.value);
         if (isNaN(value) || value < 1) {
@@ -173,14 +188,6 @@ export function initializeSelectProduct(container) {
         }
         updateProductSubtotal(container);
         updateOrderTotal();
-    });
-
-    // Fix potential race condition in animation
-    const loadingIndicator = container.querySelector('.select-loading');
-    $(select).on('select2:opening', () => {
-        if (loadingIndicator) loadingIndicator.style.display = 'block';
-    }).on('select2:close', () => {
-        if (loadingIndicator) loadingIndicator.style.display = 'none';
     });
 }
 
@@ -211,18 +218,19 @@ export function initializeRemoveProduct(productDiv) {
 }
 
 export function cleanup() {
-    try {
-        document.querySelectorAll('.product-select').forEach(select => {
-            if ($(select).data('select2')) {
-                $(select).select2('destroy');
+    document.querySelectorAll('.product-select').forEach(select => {
+        const instance = $(select).data('select2');
+        if (instance) {
+            try {
+                $(select).off().select2('destroy');
+            } catch (error) {
+                console.error('Error cleaning up Select2:', error);
             }
-        });
-        // Clear any pending requests
-        if (window.currentProductRequest) {
-            window.currentProductRequest.abort();
         }
-    } catch (error) {
-        console.error('Error during cleanup:', error);
+    });
+    // Clear any pending requests
+    if (window.currentProductRequest) {
+        window.currentProductRequest.abort();
     }
 }
 

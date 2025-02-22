@@ -2,70 +2,140 @@ import { orderBaseUrl } from '../../modules/apiConstants.js';
 import { productSelection, orderListBody } from '../../modules/domCaching.js';
 import { hideSidebars } from '../../modules/navigation.js';
 import { validateOrderForm } from './orderForm/orderValidation.js';
-
+import { calculateTotalAmount } from './orderForm/orderPrice.js';
+import { productBaseUrl } from '../../modules/apiConstants.js';
 /* --------------- Order Section ----------------- */
 // Create order >Select Customer> Add product entry >Fill product details 
 // >Date of event >Status >Submit
 
+function formatMoney(amount) {
+    return new Intl.NumberFormat('en-KE', {
+        style: 'currency',
+        currency: 'KES',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    }).format(amount);
+}
+
 async function createOrder(event) {
     event.preventDefault();
-    
-    const validationResult = validateOrderForm();
-    if (!validationResult.isValid) {
-        alert(validationResult.errors.join('\n'));
-        return;
-    }
-
     const submitButton = event.target.querySelector('button[type="submit"]');
-    if (submitButton.disabled) return;
-    submitButton.disabled = true;
-    submitButton.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Creating...';
-
+    
     try {
-        // Simplified order creation with form data
-        const formData = new FormData(event.target);
-        const newOrder = {
-            customerId: parseInt(formData.get("select-customer")),
-            dateOfEvent: formData.get("date-of-event"),
-            status: formData.get("status"),
-            products: Array.from(document.querySelectorAll(".product-entry"))
-                .map(entry => ({
-                    productId: entry.querySelector(".product-select").value,
-                    quantity: parseInt(entry.querySelector(".product-quantity").value),
-                    price: parseFloat(entry.querySelector(".product-price").value)
-                }))
-                .filter(product => product.productId && product.quantity > 0 && product.price >= 0)
-        };
-
-        const response = await Promise.race([
-            fetch(`${orderBaseUrl}/new`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(newOrder),
-            }),
-            new Promise((_, reject) => 
-                setTimeout(() => reject(new Error('Request timeout')), 10000)
-            )
-        ]);
-
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.message || "Failed to create order");
-        }
-
+        if (!submitButton) throw new Error("Submit button not found");
+        disableSubmitButton(submitButton);
+        
+        const formData = await validateAndGetFormData(event.target);
+        await submitOrderData(formData);
+        
         event.target.reset();
         productSelection.innerHTML = '';
         hideSidebars();
         await fetchOrders();
     } catch (error) {
+        showError(error.message || "Failed to create order");
         console.error("Create order error:", error);
-        alert("Error creating order: " + error.message);
     } finally {
-        submitButton.disabled = false;
-        submitButton.innerHTML = 'Create Order';
+        enableSubmitButton(submitButton);
     }
 }
-  
+
+function disableSubmitButton(button) {
+    button.disabled = true;
+    button.dataset.originalText = button.innerHTML;
+    button.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Creating...';
+}
+
+function enableSubmitButton(button) {
+    button.disabled = false;
+    button.innerHTML = button.dataset.originalText || 'Create Order';
+}
+
+function constructOrderData(formData, customerSelect) {
+    const selectedOption = customerSelect.options[customerSelect.selectedIndex];
+    if (!selectedOption) {
+        throw new Error("Invalid customer selection");
+    }
+
+    const customerInfo = selectedOption.text.split('(');
+    if (customerInfo.length !== 2) {
+        throw new Error("Invalid customer data format");
+    }
+
+    return {
+        customerId: parseInt(formData.get("select-customer")),
+        customerName: customerInfo[0].trim(),
+        customerNumber: customerInfo[1].replace(')', '').trim(),
+        dateOfEvent: formData.get("date-of-event"),
+        status: "PENDING",
+        orderItems: Array.from(document.querySelectorAll(".product-entry"))
+            .map(entry => ({
+                productId: parseInt(entry.querySelector(".product-select").value),
+                quantity: parseInt(entry.querySelector(".product-quantity").value),
+                itemPrice: parseFloat(entry.querySelector(".product-price").value),
+                productName: entry.querySelector(".product-select").text
+            }))
+            .filter(item => 
+                item.productId && 
+                item.quantity > 0 && 
+                item.itemPrice >= 0
+            ),
+        totalAmount: calculateTotalAmount(),
+        paidAmount: "0.00",
+        remainingAmount: calculateTotalAmount()
+    };
+}
+
+async function validateAndGetFormData(form) {
+    const customerSelect = form.querySelector("#select-customer");
+    if (!customerSelect?.value) {
+        throw new Error("Please select a customer");
+    }
+
+    const validationResult = validateOrderForm();
+    if (!validationResult.isValid) {
+        throw new Error(Array.isArray(validationResult.errors) ? 
+            validationResult.errors.join('\n') : 
+            'Please check your input');
+    }
+
+    const formData = new FormData(form);
+    try {
+        return constructOrderData(formData, customerSelect);
+    } catch (error) {
+        throw new Error(`Failed to construct order data: ${error.message}`);
+    }
+}
+
+async function submitOrderData(formData) {
+    const response = await fetch(`${orderBaseUrl}/new`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData)
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+        throw new Error(data.errors ? data.errors.join('\n') : data.message);
+    }
+    return data;
+}
+
+function showError(message) {
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'error-message';
+    errorDiv.textContent = message;
+    
+    const form = document.getElementById('add-order-form');
+    const existingError = form.querySelector('.error-message');
+    if (existingError) {
+        existingError.remove();
+    }
+    
+    form.insertBefore(errorDiv, form.firstChild);
+    setTimeout(() => errorDiv?.remove(), 5000);
+}
+
 async function fetchOrders(url = orderBaseUrl) {
     const loader = document.createElement('div');
     loader.className = 'loader';
@@ -110,6 +180,12 @@ async function deleteOrder(orderId) {
   
 // Update order status
 async function updateOrderStatus(orderId, newStatus) {
+    const validStatuses = ["PENDING", "COMPLETED", "CANCELLED"];
+    if (!validStatuses.includes(newStatus)) {
+        alert("Invalid status");
+        return;
+    }
+
     try {
         const response = await fetch(`${orderBaseUrl}/${encodeURIComponent(orderId)}/status`, {
             method: "PUT",
@@ -149,23 +225,51 @@ async function fetchProducts() {
 
 // Update order list UI
 function updateOrderList(orders) {
-    orderListBody.innerHTML = ""; // Clear current list
+    if (!Array.isArray(orders)) {
+        console.error("Invalid orders data received");
+        orderListBody.innerHTML = '<tr><td colspan="9">Error: Invalid data received</td></tr>';
+        return;
+    }
 
-    orders.forEach((order) => {
-        const row = document.createElement("tr");
-        row.innerHTML = `
-            <td>${order.customerName}</td>
-            <td>${order.customerNumber}</td>
-            <td>${order.status}</td>
-            <td>${order.date}</td>
-            <td>${order.products.map(p => p.name).join(", ")}</td>
-            <td>${order.totalAmount}</td>
-            <td>${order.paidAmount}</td>
-            <td>${order.remainingAmount}</td>
-            <td><button class="delete-btn" data-id="${order.id}">Delete</button></td>
-        `;
-        orderListBody.appendChild(row);
-    });
+    try {
+        orderListBody.innerHTML = orders.length ? 
+            orders.map(order => createOrderRow(order)).join('') :
+            '<tr><td colspan="9">No orders found</td></tr>';
+    } catch (error) {
+        console.error("Error updating order list:", error);
+        orderListBody.innerHTML = '<tr><td colspan="9">Error displaying orders</td></tr>';
+    }
+}
+
+function createOrderRow(order) {
+    const row = document.createElement("tr");
+    row.innerHTML = `
+        <td>${escapeHtml(order.customerName || '')}</td>
+        <td>${escapeHtml(order.customerNumber || '')}</td>
+        <td>${escapeHtml(order.status || '')}</td>
+        <td>${escapeHtml(order.date || '')}</td>
+        <td>${escapeHtml(order.products?.map(p => p.name).join(", ") || '')}</td>
+        <td>${formatMoney(order.totalAmount || 0)}</td>
+        <td>${formatMoney(order.paidAmount || 0)}</td>
+        <td>${formatMoney(order.remainingAmount || 0)}</td>
+        <td>
+            <button class="delete-btn" data-id="${escapeHtml(order.id)}">
+                Delete
+            </button>
+        </td>
+    `;
+    return row;
+}
+
+function escapeHtml(unsafe) {
+    if (unsafe == null) return '';
+    return unsafe
+        .toString()
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
 }
 
 // Fetch orders by customer name

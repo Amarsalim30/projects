@@ -6,20 +6,53 @@ import { debounce } from '../../../modules/utility.js';
 export function updateProductSubtotal(productEntry) {
     if (!productEntry) return;
 
-const quantityInput = productEntry.querySelector('.product-quantity');
-    const priceInput = productEntry.querySelector('.product-price');
-    const subtotalElement = productEntry.querySelector('.product-subtotal');
+    try {
+        const inputs = getValidatedInputs(productEntry);
+        if (!inputs) return;
 
-    if (!quantityInput || !priceInput || !subtotalElement) return;
+        const subtotal = calculateValidatedSubtotal(inputs.quantity, inputs.price);
+        if (subtotal === null) return;
 
-    const quantity = Math.max(1, parseInt(quantityInput.value) || 0);
-    const price = parseFloat(priceInput.value) || 0;
-    const subtotal = quantity * price;
-
-    quantityInput.value = quantity; // Ensure minimum value of 1
-        subtotalElement.value = `KES ${subtotal.toFixed(2)}`;
-        subtotalElement.classList.toggle('highlight', subtotal > 0);
+        updateSubtotalDisplaySafely(inputs.subtotalElement, subtotal);
+    } catch (error) {
+        console.error('Error updating product subtotal:', error);
+        setDefaultSubtotal(productEntry);
     }
+}
+
+function getValidatedInputs(productEntry) {
+    const inputs = {
+        quantity: productEntry.querySelector('.product-quantity'),
+        price: productEntry.querySelector('.product-price'),
+        subtotalElement: productEntry.querySelector('.product-subtotal')
+    };
+
+    if (!inputs.quantity || !inputs.price || !inputs.subtotalElement) {
+        return null;
+    }
+
+    return {
+        quantity: Math.max(1, parseInt(inputs.quantity.value) || 0),
+        price: Math.max(0, parseFloat(inputs.price.value) || 0),
+        subtotalElement: inputs.subtotalElement
+    };
+}
+
+function calculateValidatedSubtotal(quantity, price) {
+    if (quantity > 1000 || price > 1000000) return null;
+    
+    try {
+        return Math.round((quantity * price) * 100) / 100;
+    } catch (error) {
+        console.error('Error calculating subtotal:', error);
+        return null;
+    }
+}
+
+function updateSubtotalDisplaySafely(element, amount) {
+    element.value = formatMoney(amount);
+    element.classList.toggle('highlight', amount > 0);
+}
 
 export const updateOrderTotal = debounce(() => {
     try {
@@ -51,3 +84,37 @@ export const updateOrderTotal = debounce(() => {
         console.error('Error updating order total:', error);
     }
 }, 300);
+
+export function calculateTotalAmount() {
+    try {
+        return Array.from(document.querySelectorAll('.product-entry'))
+            .reduce((total, entry) => {
+                const quantity = parseInt(entry.querySelector('.product-quantity')?.value) || 0;
+                const price = parseFloat(entry.querySelector('.product-price')?.value) || 0;
+                if (quantity > 1000) throw new Error('Quantity exceeds maximum limit');
+                return total + (Math.round((quantity * price) * 100) / 100);
+            }, 0)
+            .toFixed(2);
+    } catch (error) {
+        console.error('Error calculating total:', error);
+        throw error;
+    }
+}
+
+export function formatMoney(amount) {
+    try {
+        const number = parseFloat(amount);
+        if (isNaN(number)) throw new Error('Invalid amount');
+        
+        return new Intl.NumberFormat('en-KE', {
+            style: 'currency',
+            currency: 'KES',
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }).format(number);
+    } catch (error) {
+        console.error('Error formatting money:', error);
+        return 'KES 0.00';
+    }
+}
+
