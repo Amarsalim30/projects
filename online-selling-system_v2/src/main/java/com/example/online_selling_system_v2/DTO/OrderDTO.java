@@ -8,9 +8,11 @@ import com.example.online_selling_system_v2.Model.Order.PaymentStatus;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Size;
+import lombok.Data;
 import jakarta.validation.Valid;
 import java.util.ArrayList;
 
+@Data
 public class OrderDTO {
     private Long id;
     
@@ -19,7 +21,7 @@ public class OrderDTO {
     
     private String customerName;
     private String customerNumber;
-    
+     
     @NotNull(message = "Event date is required")
     private LocalDate dateOfEvent;
     
@@ -48,43 +50,6 @@ public class OrderDTO {
     
     @NotNull(message = "Payment status is required")
     private PaymentStatus paymentStatus = PaymentStatus.UNPAID;
-
-    // Getters and Setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    
-    public Long getCustomerId() { return customerId; }
-    public void setCustomerId(Long customerId) { this.customerId = customerId; }
-    
-    public String getCustomerName() { return customerName; }
-    public void setCustomerName(String customerName) { this.customerName = customerName; }
-    
-    public String getCustomerNumber() { return customerNumber; }
-    public void setCustomerNumber(String customerNumber) { this.customerNumber = customerNumber; }
-    
-    public LocalDate getDateOfEvent() { return dateOfEvent; }
-    public void setDateOfEvent(LocalDate dateOfEvent) { this.dateOfEvent = dateOfEvent; }
-    
-    public OrderStatus getStatus() { return status; }
-    public void setStatus(OrderStatus status) { this.status = status; }
-    
-    public List<OrderItemDTO> getOrderItems() { return orderItems; }
-    public void setOrderItems(List<OrderItemDTO> orderItems) { this.orderItems = orderItems; }
-    
-    public BigDecimal getTotalAmount() { return totalAmount; }
-    public void setTotalAmount(BigDecimal totalAmount) { this.totalAmount = totalAmount; }
-    
-    public BigDecimal getPaidAmount() { return paidAmount; }
-    public void setPaidAmount(BigDecimal paidAmount) { this.paidAmount = paidAmount; }
-    
-    public BigDecimal getRemainingAmount() { return remainingAmount; }
-    public void setRemainingAmount(BigDecimal remainingAmount) { this.remainingAmount = remainingAmount; }
-    
-    public OrderStatus getProductionStatus() { return productionStatus; }
-    public void setProductionStatus(OrderStatus productionStatus) { this.productionStatus = productionStatus; }
-    
-    public PaymentStatus getPaymentStatus() { return paymentStatus; }
-    public void setPaymentStatus(PaymentStatus paymentStatus) { this.paymentStatus = paymentStatus; }
 
     // Add validation method
     public List<String> validate() {

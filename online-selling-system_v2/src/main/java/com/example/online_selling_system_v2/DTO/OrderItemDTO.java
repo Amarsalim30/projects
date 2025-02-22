@@ -5,16 +5,21 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Size;
+import lombok.Data;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 import com.example.online_selling_system_v2.config.OrderConstants;
 
+@Data
 public class OrderItemDTO {
     
     @NotNull(message = "Product ID is required")
     private Long productId;
+
+    private Long orderId;
 
     @NotNull(message = "Quantity is required")
     @Min(value = 1, message = "Quantity must be at least 1")
@@ -39,37 +44,6 @@ public class OrderItemDTO {
         this.itemPrice = itemPrice != null ? itemPrice.setScale(2, RoundingMode.HALF_UP) : BigDecimal.ZERO;
     }
 
-    public Long getProductId() {
-        return productId;
-    }
-
-    public void setProductId(Long productId) {
-        this.productId = productId;
-    }
-
-    public Integer getQuantity() {
-        return quantity;
-    }
-
-    public void setQuantity(Integer quantity) {
-        this.quantity = quantity;
-    }
-
-    public BigDecimal getItemPrice() {
-        return itemPrice;
-    }
-
-    public void setItemPrice(BigDecimal itemPrice) {
-        this.itemPrice = itemPrice;
-    }
-
-    public String getProductName() {
-        return productName;
-    }
-
-    public void setProductName(String productName) {
-        this.productName = productName;
-    }
 
     public BigDecimal getSubtotal() {
         if (itemPrice == null || quantity == null || 

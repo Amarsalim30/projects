@@ -41,7 +41,6 @@ public class OrderMapper {
         
         try {
             Order order = new Order();
-            order.setId(dto.getId());
             
             // Validate and set customer
             if (dto.getCustomerId() != null) {
@@ -65,7 +64,10 @@ public class OrderMapper {
             if (orderItems == null || orderItems.isEmpty()) {
                 throw new IllegalArgumentException("Order must contain at least one item");
             }
-            order.setOrderItems(orderItems);
+
+            for(OrderItem item : orderItems){
+            order.addOrderItem(item);
+            }
             
             // Validate and set monetary amounts
             if (dto.getTotalAmount() == null || dto.getTotalAmount().compareTo(BigDecimal.ZERO) < 0) {

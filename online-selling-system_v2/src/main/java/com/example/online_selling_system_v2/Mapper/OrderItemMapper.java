@@ -2,6 +2,7 @@ package com.example.online_selling_system_v2.Mapper;
 
 import com.example.online_selling_system_v2.DTO.OrderItemDTO;
 import com.example.online_selling_system_v2.Model.Product;
+import com.example.online_selling_system_v2.Model.Order.Order;
 import com.example.online_selling_system_v2.Model.Order.OrderItem;
 import com.example.online_selling_system_v2.Service.ProductService;
 import org.springframework.stereotype.Component;
@@ -18,7 +19,6 @@ import org.slf4j.LoggerFactory;
 public class OrderItemMapper {
     private static final Logger logger = LoggerFactory.getLogger(OrderItemMapper.class);
     private static ProductService productService;
-
     public OrderItemMapper(ProductService productService) {
         OrderItemMapper.productService = productService;
     }
@@ -35,7 +35,11 @@ public class OrderItemMapper {
             if (product == null) {
                 throw new IllegalArgumentException("Product not found with ID: " + dto.getProductId());
             }
-
+            
+            // Validate quantity
+            if (dto.getQuantity() <= 0) {
+                throw new IllegalArgumentException("Quantity must be positive");
+            }            
             orderItem.setProductId(dto.getProductId());
             orderItem.setProductName(product.getName());
             orderItem.setQuantity(dto.getQuantity());
@@ -47,10 +51,7 @@ public class OrderItemMapper {
             }
             orderItem.setItemPrice(price);
 
-            // Validate quantity
-            if (dto.getQuantity() <= 0) {
-                throw new IllegalArgumentException("Quantity must be positive");
-            }
+
 
         } catch (RuntimeException e) {
             logger.error("Error mapping OrderItemDTO to OrderItem: {}", e.getMessage());
@@ -68,6 +69,8 @@ public class OrderItemMapper {
 
         OrderItemDTO dto = new OrderItemDTO();
         dto.setProductId(orderItem.getProductId());
+        // Order Forder =orderItem.getOrder();
+        // dto.setOrderId(Forder.getId());
         dto.setQuantity(orderItem.getQuantity());
         dto.setItemPrice(orderItem.getItemPrice().setScale(2, RoundingMode.HALF_UP));
         dto.setProductName(orderItem.getProductName());
@@ -75,6 +78,7 @@ public class OrderItemMapper {
         return dto;
     }
 
+    //Combines to list after mapping
     public static List<OrderItem> toOrderItemList(List<OrderItemDTO> dtos) {
         if (dtos == null) {
             logger.warn("Received null OrderItemDTO list");

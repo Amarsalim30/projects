@@ -44,6 +44,10 @@ public class OrderService {
     public Optional<List<Order>> getOrderByDate(LocalDate date) {
         return orderRepository.findByDate(date);
     }
+    @Transactional(readOnly = true)
+    public Optional<Order> getOrderById(Long id) {
+        return orderRepository.findById(id);
+    }
 
     @Transactional
     public OrderDTO addOrder(OrderDTO orderDTO) {
