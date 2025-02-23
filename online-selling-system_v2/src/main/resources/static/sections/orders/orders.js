@@ -63,9 +63,7 @@ function constructOrderData(formData, customerSelect) {
     }
 
     return {
-        customerId: parseInt(formData.get("select-customer")),
-        customerName: customerInfo[0].trim(),
-        customerNumber: customerInfo[1].replace(')', '').trim(),
+        customerId: parseInt(formData.get("select-customer").value),
         dateOfEvent: formData.get("date-of-event"),
         status: "PENDING",
         orderItems: Array.from(document.querySelectorAll(".product-entry"))
@@ -163,6 +161,56 @@ async function fetchOrders(url = orderBaseUrl) {
         loader?.remove();
     }
 }
+
+// Update order list UI
+function updateOrderList(orders) {
+    if (!Array.isArray(orders)) {
+        console.error("Invalid orders data received");
+        orderListBody.innerHTML = '<tr><td colspan="9">Error: Invalid data received</td></tr>';
+        return;
+    }
+
+    try {
+        orderListBody.innerHTML = orders.length ? 
+            orders.map(order => createOrderRow(order)).join('') :
+            '<tr><td colspan="9">No orders found</td></tr>';
+    } catch (error) {
+        console.error("Error updating order list:", error);
+        orderListBody.innerHTML = '<tr><td colspan="9">Error displaying orders</td></tr>';
+    }
+}
+
+function createOrderRow(order) {
+    const row = document.createElement("tr");
+    row.innerHTML = `
+        <td>${escapeHtml(order.customerName || '')}</td>
+        <td>${escapeHtml(order.customerNumber || '')}</td>
+        <td>${escapeHtml(order.status || '')}</td>
+        <td>${escapeHtml(order.date || '')}</td>
+        <td>${escapeHtml(order.products?.map(p => p.name).join(", ") || '')}</td>
+        <td>${formatMoney(order.totalAmount || 0)}</td>
+        <td>${formatMoney(order.paidAmount || 0)}</td>
+        <td>${formatMoney(order.remainingAmount || 0)}</td>
+        <td>
+            <button class="delete-btn" data-id="${escapeHtml(order.id)}">
+                Delete
+            </button>
+        </td>
+    `;
+    return row;
+}
+
+function escapeHtml(unsafe) {
+    if (unsafe == null) return '';
+    return unsafe
+        .toString()
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
   
 async function deleteOrder(orderId) {
     try {
@@ -221,55 +269,6 @@ async function fetchProducts() {
         console.error("Error fetching products:", error);
         alert("Error fetching products");
     }
-}
-
-// Update order list UI
-function updateOrderList(orders) {
-    if (!Array.isArray(orders)) {
-        console.error("Invalid orders data received");
-        orderListBody.innerHTML = '<tr><td colspan="9">Error: Invalid data received</td></tr>';
-        return;
-    }
-
-    try {
-        orderListBody.innerHTML = orders.length ? 
-            orders.map(order => createOrderRow(order)).join('') :
-            '<tr><td colspan="9">No orders found</td></tr>';
-    } catch (error) {
-        console.error("Error updating order list:", error);
-        orderListBody.innerHTML = '<tr><td colspan="9">Error displaying orders</td></tr>';
-    }
-}
-
-function createOrderRow(order) {
-    const row = document.createElement("tr");
-    row.innerHTML = `
-        <td>${escapeHtml(order.customerName || '')}</td>
-        <td>${escapeHtml(order.customerNumber || '')}</td>
-        <td>${escapeHtml(order.status || '')}</td>
-        <td>${escapeHtml(order.date || '')}</td>
-        <td>${escapeHtml(order.products?.map(p => p.name).join(", ") || '')}</td>
-        <td>${formatMoney(order.totalAmount || 0)}</td>
-        <td>${formatMoney(order.paidAmount || 0)}</td>
-        <td>${formatMoney(order.remainingAmount || 0)}</td>
-        <td>
-            <button class="delete-btn" data-id="${escapeHtml(order.id)}">
-                Delete
-            </button>
-        </td>
-    `;
-    return row;
-}
-
-function escapeHtml(unsafe) {
-    if (unsafe == null) return '';
-    return unsafe
-        .toString()
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
 }
 
 // Fetch orders by customer name

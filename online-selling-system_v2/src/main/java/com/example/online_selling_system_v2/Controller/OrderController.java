@@ -118,7 +118,7 @@ public class OrderController {
         }
     }
     
-    @GetMapping("")
+    @GetMapping
     public ResponseEntity<List<OrderDTO>> getAllOrders() {
         try {
             logger.info("Fetching all orders");
