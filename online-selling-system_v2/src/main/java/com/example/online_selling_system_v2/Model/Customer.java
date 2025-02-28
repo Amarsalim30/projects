@@ -3,6 +3,7 @@ package com.example.online_selling_system_v2.Model;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.example.online_selling_system_v2.Model.Order.Order;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -10,6 +11,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.NotBlank;
@@ -31,8 +34,8 @@ public class Customer {
     @NotBlank(message = "name must not be blank")
     private String name;
 
-    @Column(name="number")
-    @Pattern(regexp = "^254[0-9]{9}$", message = "Phone number must be a valid Kenyan number (254XXXXXXXXX)")
+    @Column(name="number", unique = true)
+    @Pattern(regexp = "^\\+254[17][0-9]{8}$", message = "Phone number must be in format: +254XXXXXXXXX")
     private String number;
 
     @OneToMany(mappedBy = "customer")
@@ -40,6 +43,18 @@ public class Customer {
 
     public int getOrderCount() {
         return orders == null ? 0 : orders.size();
+    }
+
+    @PrePersist
+    @PreUpdate
+    private void cleanPhoneNumber() {
+        if (number != null) {
+            // Remove any spaces and ensure single country code
+            number = number.replaceAll("\\s+", "")
+                         .replaceAll("^\\+?254254", "+254")
+                         .replaceAll("^254", "+254")
+                         .replaceAll("^0", "+254");
+        }
     }
 
 }

@@ -35,4 +35,14 @@ public class ProductService {
     public List<Product> searchProducts(String searchTerm) {
         return productRepository.findByNameContainingIgnoreCase(searchTerm);
     }
+
+    public Product getProductById(Long id) {
+        return productRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
+    }
+
+    public boolean existsById(Long productId) {
+        return productRepository.existsById(productId);
+    }
 }
+

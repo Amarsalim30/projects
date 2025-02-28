@@ -3,7 +3,8 @@ package com.example.online_selling_system_v2.Model;
 import java.util.ArrayList;
 import java.util.List;
 
-import jakarta.persistence.Column;
+import com.example.online_selling_system_v2.Model.Order.Order;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -30,14 +31,11 @@ public class Product {
     
     private String name;
 
-    //private String details;
-
     private double price;
 
     private int stock;
     
-    @Column(name="type")
-    @Enumerated(EnumType.STRING)  // This ensures the enum is stored as a string in the database
+    @Enumerated(EnumType.STRING)
     private Type type;
 
     public enum Type {
@@ -45,7 +43,6 @@ public class Product {
         FURNITURE,
         CLOTHING,
         FOOD,
-        // Add more types as necessary
     }
 
     @ManyToMany
@@ -55,5 +52,4 @@ public class Product {
         inverseJoinColumns = @JoinColumn(name = "order_id")
     )
     private List<Order> orders = new ArrayList<>();
-
 }

@@ -1,6 +1,7 @@
 package com.example.online_selling_system_v2.Service;
 
 import java.util.Optional;
+
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -108,5 +109,20 @@ public class CustomerService {
                 Customer savedCustomer = customerRepository.save(updatedCustomer);
                 return CustomerMapper.toCustomerDTO(savedCustomer);
             });
+    }
+
+    public boolean existsByNumber(String number) {
+        logger.info("Checking if customer exists by number: {}", number);
+        // Normalize the number by removing any formatting
+        String normalizedNumber = number.replaceAll("[^0-9]", "");
+        
+        // If it starts with 254, that's fine, otherwise prepend it
+        if (!normalizedNumber.startsWith("254")) {
+            normalizedNumber = "254" + normalizedNumber;
+        }
+        
+        // Check both formatted and unformatted versions
+        return customerRepository.existsByNumber(normalizedNumber) ||
+               customerRepository.existsByNumber("+" + normalizedNumber);
     }
 }
