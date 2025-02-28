@@ -32,7 +32,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.http.MediaType;
 import java.util.Collections;
-import com.example.online_selling_system_v2.config.OrderConstants;
+import com.example.online_selling_system_v2.Config.OrderConstants;
 
 @RestController
 @RequestMapping(value = "/api/orders", produces = MediaType.APPLICATION_JSON_VALUE)

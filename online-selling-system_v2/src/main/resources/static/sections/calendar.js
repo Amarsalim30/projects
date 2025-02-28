@@ -15,12 +15,7 @@ export const CalendarModule = {
     },
     currentDate: new Date(),
     selectedDate: null,
-    events: {
-      "2024-01-15": [{ time: "10:00", title: "Meeting with John", description: "Discuss project updates" },
-                    { time: "14:00", title: "Project Deadline", description: "Submit final report" }],
-      "2024-01-22": [{ time: "12:30", title: "Team Lunch", description: "Celebrate project milestone" }],
-      "2024-02-10": [{ time: "19:00", title: "Client Dinner", description: "Formal dinner with key client" }]
-    }
+    events: {} // Initialize empty events object
   },
 
   /**
@@ -33,24 +28,49 @@ export const CalendarModule = {
       if (!response.ok) throw new Error("Failed to fetch orders");
       const orders = await response.json();
 
-      const events = orders.map(order => ({
-        title: `${order.customerName} - ${order.status}`,
-        start: order.date,
-        color: getStatusColor(order.status),
-        extendedProps: {
-          customerNumber: order.customerNumber,
-          products: order.products.map(p => p.name).join(", "),
-          totalAmount: order.totalAmount,
-          paidAmount: order.paidAmount,
-          remainingAmount: order.remainingAmount
-        }
-      }));
+      if (!Array.isArray(orders)) {
+        throw new Error("Invalid orders data received");
+      }
 
-      this.config.elements.calendar.fullCalendar('removeEvents');
-      this.config.elements.calendar.fullCalendar('addEventSource', events);
+      // Reset events object
+      this.config.events = {};
+
+      // Group orders by date
+      orders
+        .filter(order => order && order.dateOfEvent)
+        .forEach(order => {
+          const dateKey = order.dateOfEvent.split('T')[0]; // Get just the date part
+          if (!this.config.events[dateKey]) {
+            this.config.events[dateKey] = [];
+          }
+
+          this.config.events[dateKey].push({
+            time: order.dateOfEvent.split('T')[1]?.substring(0, 5) || '00:00',
+            title: `${order.customerName || 'No Customer'} - ${order.status || 'PENDING'}`,
+            description: `
+              Products: ${Array.isArray(order.orderItems) ? 
+                order.orderItems.map(item => item.productName).join(", ") : 
+                'No products'}
+              Total: KES ${order.totalAmount || 0}
+              Paid: KES ${order.paidAmount || 0}
+              Balance: KES ${order.remainingAmount || 0}
+            `,
+            color: getStatusColor(order.status)
+          });
+        });
+
+      // Re-render calendar with new events
+      this.renderCalendar();
+      
+      // If a date is selected, update its events display
+      if (this.config.selectedDate) {
+        const dateStr = this.config.selectedDate.toISOString().split('T')[0];
+        this.displayEvents(dateStr);
+      }
+
     } catch (error) {
       console.error("Error fetching orders:", error);
-      alert("Error loading calendar events. Please try again.");
+      this.config.events = {}; // Clear events on error
     } finally {
       hideLoadingSpinner();
     }
@@ -79,41 +99,61 @@ export const CalendarModule = {
           cell.append(indicator);
         }
       },
-      eventRender(event, element) {
-        element.css({
-          'border-radius': '4px',
-          'border': 'none',
-          'padding': '4px 8px',
-          'margin': '1px 2px'
-        });
-
-        const actions = $(`
-          <div class="event-actions">
-            <button class="edit">Edit</button>
-            <button class="delete">Delete</button>
-          </div>
-        `);
-        element.append(actions);
-
-        actions.find('.edit').click(function(e) {
-          e.stopPropagation();
-          console.log('Edit event:', event);
-        });
-
-        actions.find('.delete').click(function(e) {
-          e.stopPropagation();
-          if (confirm('Are you sure you want to delete this event?')) {
-            self.config.elements.calendar.fullCalendar('removeEvents', event._id);
-            // Add API call to delete event from backend
-          }
-        });
-      },
+      eventRender: (event, element) => this.eventRender(event, element),
       eventClick(event) {
         alert(`
           ${event.title}
           Time: ${event.start.format('HH:mm')}
           ${event.description || ''}
         `);
+      }
+    });
+  },
+
+  /**
+   * Render event with additional information and actions.
+   */
+  eventRender(event, element) {
+    element.css({
+      'border-radius': '4px',
+      'border': 'none',
+      'padding': '4px 8px',
+      'margin': '1px 2px'
+    });
+
+    // Add tooltip with detailed information
+    const tooltip = `
+      <div class="event-tooltip">
+        <strong>${event.title}</strong><br>
+        ${event.extendedProps ? `
+          Customer: ${event.extendedProps.customerNumber}<br>
+          Products: ${event.extendedProps.products}<br>
+          Total: KES ${event.extendedProps.totalAmount}<br>
+          Paid: KES ${event.extendedProps.paidAmount}<br>
+          Remaining: KES ${event.extendedProps.remainingAmount}
+        ` : ''}
+      </div>
+    `;
+    element.attr('title', tooltip);
+
+    const actions = $(`
+      <div class="event-actions">
+        <button class="edit">Edit</button>
+        <button class="delete">Delete</button>
+      </div>
+    `);
+    element.append(actions);
+
+    actions.find('.edit').click(function(e) {
+      e.stopPropagation();
+      console.log('Edit event:', event);
+    });
+
+    actions.find('.delete').click(function(e) {
+      e.stopPropagation();
+      if (confirm('Are you sure you want to delete this event?')) {
+        self.config.elements.calendar.fullCalendar('removeEvents', event._id);
+        // Add API call to delete event from backend
       }
     });
   },
@@ -195,22 +235,37 @@ export const CalendarModule = {
    * @param {string} dateString - The date string in YYYY-MM-DD format.
    */
   displayEvents(dateString) {
-    this.config.elements.selectedDate.textContent = new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'long', day: 'numeric' }).format(new Date(dateString));
+    this.config.elements.selectedDate.textContent = new Intl.DateTimeFormat('en-US', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    }).format(new Date(dateString));
+    
     this.config.elements.eventItems.innerHTML = '';
 
-    if (this.config.events[dateString]) {
-      this.config.events[dateString].forEach(event => {
+    const events = this.config.events[dateString] || [];
+    
+    if (events.length > 0) {
+      events.forEach(event => {
         const listItem = document.createElement('li');
+        listItem.classList.add('event-item');
+        listItem.style.borderLeft = `4px solid ${event.color || '#4CAF50'}`;
+        
         listItem.innerHTML = `
-          <span class="event-time">${event.time}</span>
-          <span class="event-title">${event.title}</span>
+          <div class="event-header">
+            <span class="event-time">${event.time}</span>
+            <span class="event-title">${event.title}</span>
+          </div>
+          <div class="event-description">${event.description}</div>
           <div class="event-actions">
             <button class="edit">Edit</button>
             <button class="delete">Delete</button>
           </div>
         `;
+
         this.config.elements.eventItems.appendChild(listItem);
 
+        // Add event listeners for buttons
         const deleteButton = listItem.querySelector('.delete');
         deleteButton.addEventListener('click', () => {
           const index = this.config.events[dateString].indexOf(event);

@@ -52,41 +52,76 @@ function enableSubmitButton(button) {
 }
 
 function constructOrderData(formData, customerSelect) {
-    const selectedOption = customerSelect.options[customerSelect.selectedIndex];
-    if (!selectedOption) {
-        throw new Error("Invalid customer selection");
+    if (!customerSelect) {
+        throw new Error("Customer selection element not found");
     }
 
-    const customerInfo = selectedOption.text.split('(');
-    if (customerInfo.length !== 2) {
-        throw new Error("Invalid customer data format");
+    const selectedOption = customerSelect.selectedOptions[0];
+    if (!selectedOption) {
+        throw new Error("No customer selected");
+    }
+
+    const dateOfEvent = formData.get("dateOfEvent");
+    if (!dateOfEvent) {
+        throw new Error("Event date is required");
+    }
+
+    const orderItems = Array.from(document.querySelectorAll(".product-entry"))
+        .map(entry => {
+            const productSelect = entry.querySelector(".product-select");
+            const quantityInput = entry.querySelector(".product-quantity");
+            const priceInput = entry.querySelector(".product-price");
+
+            if (!productSelect || !quantityInput || !priceInput) {
+                throw new Error("Missing required product entry fields");
+            }
+
+            return {
+                productId: parseInt(productSelect.value),
+                quantity: parseInt(quantityInput.value),
+                itemPrice: parseFloat(priceInput.value),
+                productName: productSelect.options[productSelect.selectedIndex]?.text || ''
+            };
+        })
+        .filter(item => 
+            item.productId && 
+            !isNaN(item.quantity) && 
+            item.quantity > 0 && 
+            !isNaN(item.itemPrice) && 
+            item.itemPrice >= 0
+        );
+
+    if (orderItems.length === 0) {
+        throw new Error("At least one valid product entry is required");
+    }
+
+    const total = calculateTotalAmount();
+    if (!total || isNaN(total)) {
+        throw new Error("Invalid total amount calculated");
     }
 
     return {
-        customerId: parseInt(formData.get("select-customer").value),
-        dateOfEvent: formData.get("date-of-event"),
+        customerId: parseInt(customerSelect.value),
+        dateOfEvent: dateOfEvent, // Using the correct field name from the form
         status: "PENDING",
-        orderItems: Array.from(document.querySelectorAll(".product-entry"))
-            .map(entry => ({
-                productId: parseInt(entry.querySelector(".product-select").value),
-                quantity: parseInt(entry.querySelector(".product-quantity").value),
-                itemPrice: parseFloat(entry.querySelector(".product-price").value),
-                productName: entry.querySelector(".product-select").text
-            }))
-            .filter(item => 
-                item.productId && 
-                item.quantity > 0 && 
-                item.itemPrice >= 0
-            ),
-        totalAmount: calculateTotalAmount(),
+        orderItems: orderItems,
+        totalAmount: total,
         paidAmount: "0.00",
-        remainingAmount: calculateTotalAmount()
+        remainingAmount: total
     };
 }
 
 async function validateAndGetFormData(form) {
+    if (!form) {
+        throw new Error("Form element not found");
+    }
+
     const customerSelect = form.querySelector("#select-customer");
-    if (!customerSelect?.value) {
+    if (!customerSelect) {
+        throw new Error("Customer selection element not found");
+    }
+
+    if (!customerSelect.value) {
         throw new Error("Please select a customer");
     }
 
@@ -95,6 +130,11 @@ async function validateAndGetFormData(form) {
         throw new Error(Array.isArray(validationResult.errors) ? 
             validationResult.errors.join('\n') : 
             'Please check your input');
+    }
+
+    const dateInput = form.querySelector("#date-of-event");
+    if (!dateInput || !dateInput.value) {
+        throw new Error("Event date is required");
     }
 
     const formData = new FormData(form);
@@ -106,17 +146,28 @@ async function validateAndGetFormData(form) {
 }
 
 async function submitOrderData(formData) {
-    const response = await fetch(`${orderBaseUrl}/new`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData)
-    });
+    try {
+        const response = await fetch(`${orderBaseUrl}/new`, {
+            method: "POST",
+            headers: { 
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            },
+            body: JSON.stringify(formData)
+        });
 
-    const data = await response.json();
-    if (!response.ok) {
-        throw new Error(data.errors ? data.errors.join('\n') : data.message);
+        const data = await response.json();
+        if (!response.ok) {
+            const errorMessage = data.errors ? 
+                data.errors.join('\n') : 
+                data.message || 'Failed to create order';
+            throw new Error(errorMessage);
+        }
+        return data;
+    } catch (error) {
+        console.error('Order submission error:', error);
+        throw new Error(`Failed to submit order: ${error.message}`);
     }
-    return data;
 }
 
 function showError(message) {
@@ -171,9 +222,19 @@ function updateOrderList(orders) {
     }
 
     try {
-        orderListBody.innerHTML = orders.length ? 
-            orders.map(order => createOrderRow(order)).join('') :
-            '<tr><td colspan="9">No orders found</td></tr>';
+        // Clear existing content
+        orderListBody.innerHTML = '';
+        
+        if (orders.length === 0) {
+            orderListBody.innerHTML = '<tr><td colspan="9">No orders found</td></tr>';
+            return;
+        }
+
+        // Append each row to the tbody
+        orders.forEach(order => {
+            const row = createOrderRow(order);
+            orderListBody.appendChild(row);
+        });
     } catch (error) {
         console.error("Error updating order list:", error);
         orderListBody.innerHTML = '<tr><td colspan="9">Error displaying orders</td></tr>';
@@ -182,12 +243,14 @@ function updateOrderList(orders) {
 
 function createOrderRow(order) {
     const row = document.createElement("tr");
-    row.innerHTML = `
+    
+    // Create the HTML content
+    const rowContent = `
         <td>${escapeHtml(order.customerName || '')}</td>
         <td>${escapeHtml(order.customerNumber || '')}</td>
         <td>${escapeHtml(order.status || '')}</td>
-        <td>${escapeHtml(order.date || '')}</td>
-        <td>${escapeHtml(order.products?.map(p => p.name).join(", ") || '')}</td>
+        <td>${escapeHtml(order.dateOfEvent || '')}</td>
+        <td>${order.orderItems ? escapeHtml(order.orderItems.map(item => item.productName).join(", ")) : ''}</td>
         <td>${formatMoney(order.totalAmount || 0)}</td>
         <td>${formatMoney(order.paidAmount || 0)}</td>
         <td>${formatMoney(order.remainingAmount || 0)}</td>
@@ -197,6 +260,8 @@ function createOrderRow(order) {
             </button>
         </td>
     `;
+    
+    row.innerHTML = rowContent;
     return row;
 }
 

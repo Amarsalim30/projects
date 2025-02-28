@@ -11,7 +11,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
-import com.example.online_selling_system_v2.config.OrderConstants;
+import com.example.online_selling_system_v2.Config.OrderConstants;
 
 @Data
 public class OrderItemDTO {

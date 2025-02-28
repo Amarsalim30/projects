@@ -1,4 +1,4 @@
-package com.example.online_selling_system_v2.config;
+package com.example.online_selling_system_v2.Config;
 
 import java.math.BigDecimal;
 

@@ -8,7 +8,7 @@ import java.math.RoundingMode;
 
 import com.example.online_selling_system_v2.Model.Customer;
 import com.example.online_selling_system_v2.Model.Product;
-import com.example.online_selling_system_v2.config.OrderConstants;
+import com.example.online_selling_system_v2.Config.OrderConstants;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;

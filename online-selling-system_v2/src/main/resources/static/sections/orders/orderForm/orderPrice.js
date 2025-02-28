@@ -87,17 +87,26 @@ export const updateOrderTotal = debounce(() => {
 
 export function calculateTotalAmount() {
     try {
-        return Array.from(document.querySelectorAll('.product-entry'))
+        const entries = document.querySelectorAll('.product-entry');
+        if (!entries || entries.length === 0) {
+            throw new Error('No product entries found');
+        }
+
+        return Array.from(entries)
             .reduce((total, entry) => {
                 const quantity = parseInt(entry.querySelector('.product-quantity')?.value) || 0;
                 const price = parseFloat(entry.querySelector('.product-price')?.value) || 0;
-                if (quantity > 1000) throw new Error('Quantity exceeds maximum limit');
+                
+                // Add validation
+                if (quantity > 1000) throw new Error('Quantity exceeds maximum limit of 1000');
+                if (price > 1000000) throw new Error('Price exceeds maximum limit');
+                
                 return total + (Math.round((quantity * price) * 100) / 100);
             }, 0)
             .toFixed(2);
     } catch (error) {
         console.error('Error calculating total:', error);
-        throw error;
+        throw new Error(`Failed to calculate total: ${error.message}`);
     }
 }
 

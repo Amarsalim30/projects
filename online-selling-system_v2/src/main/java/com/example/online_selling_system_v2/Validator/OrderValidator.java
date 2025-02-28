@@ -9,7 +9,7 @@ import com.example.online_selling_system_v2.Service.CustomerService;
 import com.example.online_selling_system_v2.Service.ProductService;
 import com.example.online_selling_system_v2.DTO.OrderDTO;
 import com.example.online_selling_system_v2.DTO.OrderItemDTO;
-import com.example.online_selling_system_v2.config.OrderConstants;
+import com.example.online_selling_system_v2.Config.OrderConstants;
 
 @Component
 public class OrderValidator {
