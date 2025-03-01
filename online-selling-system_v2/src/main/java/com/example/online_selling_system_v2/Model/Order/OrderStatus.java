@@ -9,7 +9,9 @@ public enum OrderStatus {
     IN_PROGRESS("Production started"),
     COMPLETED("Production complete"), 
     DELIVERED("Delivered to client"),
-    CANCELLED("Order cancelled");
+    CANCELLED("Order cancelled"),
+    PRODUCTION_STARTED("Production started"),
+    PRODUCTION_COMPLETE("Production complete");
 
     private final String description;
 
@@ -49,6 +51,10 @@ public enum OrderStatus {
                 return false;
             case CANCELLED:
                 return false;
+            case PRODUCTION_STARTED:
+                return nextStatus == PRODUCTION_COMPLETE;
+            case PRODUCTION_COMPLETE:
+                return nextStatus == DELIVERED;
             default:
                 return false;
         }

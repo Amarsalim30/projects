@@ -4,7 +4,9 @@ export const ORDER_STATUS = {
     IN_PROGRESS: 'IN_PROGRESS',
     COMPLETED: 'COMPLETED',
     DELIVERED: 'DELIVERED',
-    CANCELLED: 'CANCELLED'
+    CANCELLED: 'CANCELLED',
+    PRODUCTION_STARTED: 'PRODUCTION_STARTED',
+    PRODUCTION_COMPLETE: 'PRODUCTION_COMPLETE'
 };
 
 // Payment status constants matching backend PaymentStatus enum
@@ -25,12 +27,17 @@ export function getStatusColor(status) {
         COMPLETED: '#27ae60', // green
         DELIVERED: '#2ecc71', // light green
         CANCELLED: '#e74c3c', // red
+        PRODUCTION_STARTED: '#9b59b6', // purple
+        PRODUCTION_COMPLETE: '#16a085', // teal
         // Payment status colors
         UNPAID: '#e74c3c', // red
         PARTIAL: '#f1c40f', // yellow
         PAID: '#27ae60' // green
     };
     
-    const normalizedStatus = status.toUpperCase().trim();
-    return colors[normalizedStatus] || '#95a5a6';
+    // Normalize status by removing spaces and converting to uppercase
+    const normalizedStatus = status.toUpperCase().replace(/\s+/g, '_');
+    const color = colors[normalizedStatus] || '#95a5a6';
+    console.log(`Original Status: ${status}, Normalized: ${normalizedStatus}, Color: ${color}`);
+    return color;
 }

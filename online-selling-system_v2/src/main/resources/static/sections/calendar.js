@@ -108,11 +108,7 @@ export const CalendarModule = {
       },
       eventRender: (event, element) => this.eventRender(event, element),
       eventClick(event) {
-        alert(`
-          ${event.title}
-          Time: ${event.start.format('HH:mm')}
-          ${event.description || ''}
-        `);
+        alert(`Event: ${event.title}\nTime: ${event.start.format('HH:mm')}\nDescription: ${event.description || ''}`);
       }
     });
   },
