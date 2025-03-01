@@ -13,6 +13,6 @@ import com.example.online_selling_system_v2.Model.Order.Order;
 public interface OrderRepository extends JpaRepository<Order, Long> {
     Optional<List<Order>> findByCustomer_Name(String customerName);
     Optional<List<Order>> findByDate(LocalDate date);
-    Optional<Order> findById(Long id);
+    // Optional<Order> findById(Long id);
     
 }

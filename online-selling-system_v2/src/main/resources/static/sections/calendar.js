@@ -32,37 +32,38 @@ export const CalendarModule = {
         throw new Error("Invalid orders data received");
       }
 
-      // Reset events object
       this.config.events = {};
 
-      // Group orders by date
       orders
         .filter(order => order && order.dateOfEvent)
         .forEach(order => {
-          const dateKey = order.dateOfEvent.split('T')[0]; // Get just the date part
+          const dateKey = order.dateOfEvent.split('T')[0];
           if (!this.config.events[dateKey]) {
             this.config.events[dateKey] = [];
           }
 
+          const productsDescription = order.orderItems ? 
+            order.orderItems.map(item => 
+              `${item.productName} × ${item.quantity} = KES ${(item.itemPrice * item.quantity).toFixed(2)}`
+            ).join('\n') : 
+            'No products';
+
           this.config.events[dateKey].push({
+            id: order.id,
             time: order.dateOfEvent.split('T')[1]?.substring(0, 5) || '00:00',
             title: `${order.customerName || 'No Customer'} - ${order.status || 'PENDING'}`,
-            description: `
-              Products: ${Array.isArray(order.orderItems) ? 
-                order.orderItems.map(item => item.productName).join(", ") : 
-                'No products'}
-              Total: KES ${order.totalAmount || 0}
-              Paid: KES ${order.paidAmount || 0}
-              Balance: KES ${order.remainingAmount || 0}
-            `,
+            status: order.status,
+            orderItems: order.orderItems || [],
+            description: productsDescription,
+            totalAmount: order.totalAmount || 0,
+            paidAmount: order.paidAmount || 0,
+            remainingAmount: order.remainingAmount || 0,
             color: getStatusColor(order.status)
           });
         });
 
-      // Re-render calendar with new events
       this.renderCalendar();
       
-      // If a date is selected, update its events display
       if (this.config.selectedDate) {
         const dateStr = this.config.selectedDate.toISOString().split('T')[0];
         this.displayEvents(dateStr);
@@ -70,7 +71,7 @@ export const CalendarModule = {
 
     } catch (error) {
       console.error("Error fetching orders:", error);
-      this.config.events = {}; // Clear events on error
+      this.config.events = {};
     } finally {
       hideLoadingSpinner();
     }
@@ -255,10 +256,24 @@ export const CalendarModule = {
           <div class="event-header">
             <span class="event-time">${event.time}</span>
             <span class="event-title">${event.title}</span>
+            <div class="status-control">
+              <select class="status-select">
+                <option value="COMPLETED" ${event.status === 'COMPLETED' ? 'selected' : ''}>Completed</option>
+                <option value="CANCELLED" ${event.status === 'CANCELLED' ? 'selected' : ''}>Cancelled</option>
+              </select>
+              <button class="update-status" title="Update Status">✓</button>
+            </div>
           </div>
-          <div class="event-description">${event.description}</div>
+          <div class="event-description">
+            <pre class="products-list">${event.description}</pre>
+            <div class="totals">
+              Total: KES ${event.totalAmount.toFixed(2)}
+              Paid: KES ${event.paidAmount.toFixed(2)}
+              Balance: KES ${event.remainingAmount.toFixed(2)}
+            </div>
+          </div>
           <div class="event-actions">
-            <button class="edit">Edit</button>
+            <button class="edit">Edit Payment</button>
             <button class="delete">Delete</button>
           </div>
         `;
@@ -277,13 +292,123 @@ export const CalendarModule = {
 
         const editButton = listItem.querySelector('.edit');
         editButton.addEventListener('click', () => {
-          console.log('Edit event:', event);
+          this.showPaymentModal(event);
+        });
+
+        // Add status update listener
+        const statusSelect = listItem.querySelector('.status-select');
+        const updateStatusBtn = listItem.querySelector('.update-status');
+        updateStatusBtn.addEventListener('click', async () => {
+          const newStatus = statusSelect.value;
+          try {
+            await fetch(`${orderBaseUrl}/${event.id}/status`, {
+              method: 'PUT',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ newStatus })
+            });
+            await this.fetchAndRenderOrders();
+          } catch (error) {
+            console.error('Error updating status:', error);
+            alert('Failed to update status');
+          }
         });
       });
     } else {
       const listItem = document.createElement('li');
       listItem.textContent = "No events for this day.";
       this.config.elements.eventItems.appendChild(listItem);
+    }
+  },
+
+  showPaymentModal(event) {
+    const modal = document.getElementById('payment-modal');
+    const modalTotal = document.getElementById('modal-total');
+    const modalPaid = document.getElementById('modal-paid');
+    const modalRemaining = document.getElementById('modal-remaining');
+    const paymentForm = document.getElementById('payment-form');
+    const paymentInput = document.getElementById('payment-amount');
+    const closeBtn = modal.querySelector('.close');
+
+    modalTotal.textContent = `KES ${event.totalAmount.toFixed(2)}`;
+    modalPaid.textContent = `KES ${event.paidAmount.toFixed(2)}`;
+    modalRemaining.textContent = `KES ${event.remainingAmount.toFixed(2)}`;
+    
+    paymentInput.max = event.remainingAmount;
+    paymentInput.value = '';
+
+    modal.style.display = 'block';
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        const amount = parseFloat(paymentInput.value);
+        
+        if (isNaN(amount) || amount < 0 || amount > event.remainingAmount) {
+            alert(`Please enter an amount between 0 and ${event.remainingAmount}`);
+            return;
+        }
+
+        try {
+            const submitButton = paymentForm.querySelector('button[type="submit"]');
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Updating...';
+
+            await this.updatePaidAmount(event.id, amount);
+            await this.fetchAndRenderOrders();
+            modal.style.display = 'none';
+        } catch (error) {
+            alert('Failed to update payment: ' + error.message);
+        } finally {
+            const submitButton = paymentForm.querySelector('button[type="submit"]');
+            submitButton.disabled = false;
+            submitButton.innerHTML = 'Update Payment';
+        }
+    };
+
+    const closeModal = () => {
+        modal.style.display = 'none';
+        paymentForm.removeEventListener('submit', handleSubmit);
+        closeBtn.removeEventListener('click', closeModal);
+    };
+
+    paymentForm.addEventListener('submit', handleSubmit);
+    closeBtn.addEventListener('click', closeModal);
+    
+    window.onclick = (event) => {
+        if (event.target === modal) {
+            closeModal();
+        }
+    };
+  },
+
+  async updatePaidAmount(orderId, amount) {
+    try {
+        // Convert amount to number and validate
+        const paymentAmount = parseFloat(amount);
+        if (isNaN(paymentAmount) || paymentAmount < 0) {
+            throw new Error('Invalid payment amount');
+        }
+
+        const response = await fetch(`${orderBaseUrl}/${orderId}/paid`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ paidAmount: paymentAmount })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to update payment');
+        }
+
+        const updatedOrder = await response.json();
+        return updatedOrder;
+    } catch (error) {
+        console.error('Payment update error:', error);
+        throw new Error(`Payment update failed: ${error.message}`);
     }
   },
 

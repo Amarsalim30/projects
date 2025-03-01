@@ -104,7 +104,7 @@ public class OrderController {
             }
             
             // Set initial status
-            orderDTO.setStatus(OrderStatus.PENDING);
+            orderDTO.setStatus(OrderStatus.IN_PROGRESS);
             orderDTO.setProductionStatus(OrderStatus.PENDING);
             orderDTO.setPaymentStatus(PaymentStatus.UNPAID);
             orderDTO.setPaidAmount(BigDecimal.ZERO);
@@ -136,12 +136,7 @@ public class OrderController {
             @PathVariable(required = false) String newStatus,
             @RequestParam(value = "newStatus", required = false) String newStatusParam) {
         try {
-            if (orderId == null) {
-                return ResponseEntity.badRequest()
-                    .body(Map.of("error", "Order ID is required"));
-            }
-
-            // Use path variable first, then query param
+            // Remove redundant null check since @PathVariable ensures non-null
             String statusToUpdate = newStatus != null ? newStatus : newStatusParam;
             
             // Clean up the status string
@@ -165,14 +160,13 @@ public class OrderController {
                 .body(Map.of("error", "Failed to update order status: " + e.getMessage()));
         }
     }
+
     @PutMapping("{orderId}/paid")
-    public ResponseEntity<?> updatePaidAmount(@PathVariable Long orderId, @RequestParam(name = "paidAmount") BigDecimal paidAmount) {
+    public ResponseEntity<?> updatePaidAmount(
+            @PathVariable Long orderId,
+            @RequestParam(name = "paidAmount") BigDecimal paidAmount) {
         try {
-            if (orderId == null) {
-                return ResponseEntity.badRequest()
-                    .body(Map.of("error", "Order ID is required"));
-            }
-            
+            // Remove redundant null check since @PathVariable ensures non-null
             if (paidAmount == null || paidAmount.compareTo(BigDecimal.ZERO) < 0) {
                 return ResponseEntity.badRequest()
                     .body(Map.of("error", "Paid amount must be a positive number"));

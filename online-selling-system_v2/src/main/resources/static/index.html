@@ -21,6 +21,7 @@
     href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.2/fullcalendar.min.css"
     rel="stylesheet"
   />
+  <link href="css/calendar.css" rel="stylesheet" />
     <!-- External Scripts -->
   <!-- jQuery -->
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -330,7 +331,24 @@
       </form>
     </div>
   </div>
-
+  <div id="payment-modal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Update Payment</h2>
+        <div class="payment-details">
+            <p>Current Total: <span id="modal-total"></span></p>
+            <p>Already Paid: <span id="modal-paid"></span></p>
+            <p>Remaining: <span id="modal-remaining"></span></p>
+        </div>
+        <form id="payment-form">
+            <div class="form-group">
+                <label for="payment-amount">Payment Amount (KES)</label>
+                <input type="number" id="payment-amount" step="0.01" min="0" required>
+            </div>
+            <button type="submit" class="btn-primary">Update Payment</button>
+        </form>
+    </div>
+</div>
 
   <!-- Our App JS -->
   <script type="module" src="app.js"></script>
