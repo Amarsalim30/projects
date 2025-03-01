@@ -42,23 +42,21 @@ export const CalendarModule = {
             this.config.events[dateKey] = [];
           }
 
-          const productsDescription = order.orderItems ? 
-            order.orderItems.map(item => 
-              `${item.productName} × ${item.quantity} = KES ${(item.itemPrice * item.quantity).toFixed(2)}`
-            ).join('\n') : 
-            'No products';
+          // Always use the enum name for status
+          const statusKey = order.status.toUpperCase().replace(/\s+/g, '_');
+          const statusColor = getStatusColor(statusKey);
 
           this.config.events[dateKey].push({
             id: order.id,
             time: order.dateOfEvent.split('T')[1]?.substring(0, 5) || '00:00',
             title: `${order.customerName || 'No Customer'} - ${order.status || 'PENDING'}`,
-            status: order.status,
+            status: statusKey,
             orderItems: order.orderItems || [],
-            description: productsDescription,
+            description: this.formatProductsDescription(order.orderItems),
             totalAmount: order.totalAmount || 0,
             paidAmount: order.paidAmount || 0,
             remainingAmount: order.remainingAmount || 0,
-            color: getStatusColor(order.status)
+            color: statusColor
           });
         });
 
@@ -207,6 +205,7 @@ export const CalendarModule = {
 
       const fullDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
+      // Add today and selected classes
       if (year === new Date().getFullYear() && month === new Date().getMonth() && day === new Date().getDate()) {
         dayElement.classList.add('today');
       }
@@ -215,9 +214,17 @@ export const CalendarModule = {
         dayElement.classList.add('selected');
       }
 
-      if (this.config.events[fullDate]) {
+      // Modified event indicator code
+      const events = this.config.events[fullDate] || [];
+      if (events.length > 0) {
         const eventIndicator = document.createElement('span');
         eventIndicator.classList.add('event-indicator');
+        
+        // Get latest event's status and color
+        const latestEvent = events[events.length - 1];
+        const statusColor = getStatusColor(latestEvent.status);
+        eventIndicator.style.backgroundColor = statusColor;
+        
         dayElement.appendChild(eventIndicator);
       }
 
@@ -431,6 +438,15 @@ export const CalendarModule = {
 
     const todayString = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(new Date().getDate()).padStart(2, '0')}`;
     this.displayEvents(todayString);
+  },
+
+  // Add helper method for consistent product description formatting
+  formatProductsDescription(orderItems) {
+    if (!orderItems) return 'No products';
+    
+    return orderItems.map(item => 
+      `${item.productName} × ${item.quantity} = KES ${(item.itemPrice * item.quantity).toFixed(2)}`
+    ).join('\n');
   }
 };
 

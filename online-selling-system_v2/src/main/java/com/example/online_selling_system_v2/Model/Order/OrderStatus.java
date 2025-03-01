@@ -21,7 +21,8 @@ public enum OrderStatus {
 
     @JsonValue
     public String getDescription() {
-        return description;
+        // Return the enum name instead of description for consistent status handling
+        return this.name();
     }
 
     @JsonCreator
@@ -30,8 +31,13 @@ public enum OrderStatus {
             throw new IllegalArgumentException("Status value cannot be null or empty");
         }
 
+        // Normalize the input string
+        String normalized = value.trim()
+                               .toUpperCase()
+                               .replace(" ", "_");
+
         try {
-            return OrderStatus.valueOf(value.toUpperCase());
+            return OrderStatus.valueOf(normalized);
         } catch (IllegalArgumentException e) {
             String validValues = Arrays.toString(OrderStatus.values());
             throw new IllegalArgumentException(
