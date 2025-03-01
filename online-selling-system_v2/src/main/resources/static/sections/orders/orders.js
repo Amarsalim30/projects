@@ -4,7 +4,7 @@ import { hideSidebars } from '../../modules/navigation.js';
 import { validateOrderForm } from './orderForm/orderValidation.js';
 import { calculateTotalAmount } from './orderForm/orderPrice.js';
 import { productBaseUrl } from '../../modules/apiConstants.js';
-import { debounce } from '../../modules/utility.js';
+import { debounce, showNotification } from '../../modules/utility.js';
 /* --------------- Order Section ----------------- */
 // Create order >Select Customer> Add product entry >Fill product details 
 // >Date of event >Status >Submit
@@ -33,9 +33,11 @@ async function createOrder(event) {
         productSelection.innerHTML = '';
         hideSidebars();
         await fetchOrders();
+        showNotification('Order created successfully!', 'success');
     } catch (error) {
         showError(error.message || "Failed to create order");
         console.error("Create order error:", error);
+        showNotification(`Failed to create order: ${error.message}`, 'error');
     } finally {
         enableSubmitButton(submitButton);
     }

@@ -47,4 +47,29 @@ function showLoadingSpinner() {
         spinner.style.display = "none";
       }
     }
+
+export function showNotification(message, type = 'success') {
+  const container = document.getElementById('notification-container');
+  if (!container) return;
+
+  const notification = document.createElement('div');
+  notification.className = `notification ${type}`;
+  notification.textContent = message;
+
+  container.appendChild(notification);
+
+  // Show notification
+  requestAnimationFrame(() => {
+    notification.classList.add('show');
+  });
+
+  // Remove notification after 3 seconds
+  setTimeout(() => {
+    notification.classList.remove('show');
+    setTimeout(() => {
+      notification.remove();
+    }, 500);
+  }, 3000);
+}
+
 export{throttle,debounce,showLoadingSpinner,hideLoadingSpinner};
