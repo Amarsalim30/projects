@@ -22,13 +22,13 @@ export function getStatusColor(status) {
     
     const colors = {
         // Order status colors
-        PENDING: '#f1c40f', // yellow
-        IN_PROGRESS: '#3498db', // blue
-        COMPLETED: '#27ae60', // green
-        DELIVERED: '#2ecc71', // light green
+        PENDING: '#27ae60', // green
+        IN_PROGRESS: '#27ae60', // green
+        COMPLETED: '#95a5a6', // grey
+        DELIVERED: '#95a5a6', // grey
         CANCELLED: '#e74c3c', // red
-        PRODUCTION_STARTED: '#9b59b6', // purple
-        PRODUCTION_COMPLETE: '#16a085', // teal
+        PRODUCTION_STARTED: '#27ae60', // green
+        PRODUCTION_COMPLETE: '#95a5a6', // grey
         // Payment status colors
         UNPAID: '#e74c3c', // red
         PARTIAL: '#f1c40f', // yellow
