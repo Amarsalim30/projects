@@ -4,6 +4,7 @@ import { hideSidebars } from '../../modules/navigation.js';
 import { validateOrderForm } from './orderForm/orderValidation.js';
 import { calculateTotalAmount } from './orderForm/orderPrice.js';
 import { productBaseUrl } from '../../modules/apiConstants.js';
+import { debounce } from '../../modules/utility.js';
 /* --------------- Order Section ----------------- */
 // Create order >Select Customer> Add product entry >Fill product details 
 // >Date of event >Status >Submit
@@ -360,6 +361,40 @@ async function fetchOrdersByDate(date) {
         console.error("Error fetching orders by date:", error);
         alert("Error fetching orders by date");
     }
+}
+
+// Add search functionality
+const searchInput = document.getElementById('search-order');
+if (searchInput) {
+    searchInput.addEventListener('input', debounce(async (e) => {
+        const searchTerm = e.target.value.trim();
+        
+        if (searchTerm.length === 0) {
+            await fetchOrders(orderBaseUrl);
+            return;
+        }
+
+        try {
+            let searchUrl;
+            // Determine if search term is a date
+            const isDate = /^\d{4}-\d{2}-\d{2}$/.test(searchTerm) && !isNaN(Date.parse(searchTerm));
+            
+            // Construct the search URL with query parameters
+            if (isDate) {
+                searchUrl = `${orderBaseUrl}/search?date=${encodeURIComponent(searchTerm)}`;
+            } else {
+                searchUrl = `${orderBaseUrl}/search?customerName=${encodeURIComponent(searchTerm)}`;
+            }
+            
+            await fetchOrders(searchUrl);
+        } catch (error) {
+            console.error('Search failed:', error);
+            orderListBody.innerHTML = `
+                <tr><td colspan="9" class="error-message">
+                    Search failed: ${error.message}
+                </td></tr>`;
+        }
+    }, 300));
 }
 
 export { createOrder, fetchOrders, deleteOrder, updateOrderStatus, fetchProducts, updateOrderList, fetchOrdersByCustomerName, fetchOrdersByDate };

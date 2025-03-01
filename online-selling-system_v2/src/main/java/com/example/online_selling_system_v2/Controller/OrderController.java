@@ -16,10 +16,13 @@ import com.example.online_selling_system_v2.Validator.ValidationResult;
 import jakarta.validation.Valid;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Map;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -185,6 +188,41 @@ public class OrderController {
             logger.error("Error updating paid amount", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(Map.of("error", "Failed to update paid amount: " + e.getMessage()));
+        }
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<OrderDTO>> searchOrders(
+            @RequestParam(required = false) String customerName,
+            @RequestParam(required = false) String date) {
+        try {
+            List<OrderDTO> orders;
+
+            if (customerName != null && !customerName.isBlank()) {
+                // Using case-insensitive search
+                orders = orderService.getOrderByCustomerName(customerName.trim())
+                    .orElse(Collections.emptyList())
+                    .stream()
+                    .map(orderMapper::toOrderDTO)
+                    .collect(Collectors.toList());
+            } else if (date != null && !date.isBlank()) {
+                LocalDate searchDate = LocalDate.parse(date.trim());
+                orders = orderService.getOrderByDate(searchDate)
+                    .orElse(Collections.emptyList())
+                    .stream()
+                    .map(orderMapper::toOrderDTO)
+                    .collect(Collectors.toList());
+            } else {
+                orders = orderMapper.toOrderDTOList(orderService.getAllOrders());
+            }
+
+            return ResponseEntity.ok(orders);
+        } catch (DateTimeParseException e) {
+            logger.error("Invalid date format: {}", date, e);
+            throw new IllegalArgumentException("Invalid date format. Please use YYYY-MM-DD");
+        } catch (Exception e) {
+            logger.error("Error searching orders", e);
+            throw new RuntimeException("Failed to search orders");
         }
     }
 }

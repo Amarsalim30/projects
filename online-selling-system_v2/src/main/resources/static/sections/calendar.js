@@ -42,20 +42,23 @@ export const CalendarModule = {
             this.config.events[dateKey] = [];
           }
 
-          // Ensure color is updated based on current status
-          const statusColor = getStatusColor(order.status);
-          
+          const productsDescription = order.orderItems ? 
+            order.orderItems.map(item => 
+              `${item.productName} × ${item.quantity} = KES ${(item.itemPrice * item.quantity).toFixed(2)}`
+            ).join('\n') : 
+            'No products';
+
           this.config.events[dateKey].push({
             id: order.id,
             time: order.dateOfEvent.split('T')[1]?.substring(0, 5) || '00:00',
             title: `${order.customerName || 'No Customer'} - ${order.status || 'PENDING'}`,
             status: order.status,
             orderItems: order.orderItems || [],
-            description: this.formatProductsDescription(order.orderItems),
+            description: productsDescription,
             totalAmount: order.totalAmount || 0,
             paidAmount: order.paidAmount || 0,
             remainingAmount: order.remainingAmount || 0,
-            color: statusColor // Set the color explicitly
+            color: getStatusColor(order.status)
           });
         });
 
@@ -72,15 +75,6 @@ export const CalendarModule = {
     } finally {
       hideLoadingSpinner();
     }
-  },
-
-  // Add helper method for consistent product description formatting
-  formatProductsDescription(orderItems) {
-    return orderItems ? 
-      orderItems.map(item => 
-        `${item.productName} × ${item.quantity} = KES ${(item.itemPrice * item.quantity).toFixed(2)}`
-      ).join('\n') : 
-      'No products';
   },
 
   /**
@@ -108,7 +102,11 @@ export const CalendarModule = {
       },
       eventRender: (event, element) => this.eventRender(event, element),
       eventClick(event) {
-        alert(`Event: ${event.title}\nTime: ${event.start.format('HH:mm')}\nDescription: ${event.description || ''}`);
+        alert(`
+          ${event.title}
+          Time: ${event.start.format('HH:mm')}
+          ${event.description || ''}
+        `);
       }
     });
   },
@@ -217,17 +215,9 @@ export const CalendarModule = {
         dayElement.classList.add('selected');
       }
 
-      // Modified event indicator code
-      const events = this.config.events[fullDate] || [];
-      if (events.length > 0) {
+      if (this.config.events[fullDate]) {
         const eventIndicator = document.createElement('span');
         eventIndicator.classList.add('event-indicator');
-        
-        // Get latest event status
-        const latestEvent = events[events.length - 1];
-        const statusColor = getStatusColor(latestEvent.status);
-        eventIndicator.style.backgroundColor = statusColor;
-        
         dayElement.appendChild(eventIndicator);
       }
 
@@ -260,24 +250,21 @@ export const CalendarModule = {
       events.forEach(event => {
         const listItem = document.createElement('li');
         listItem.classList.add('event-item');
-        // Always get fresh color based on current status
-        const currentColor = getStatusColor(event.status);
-        listItem.style.borderLeft = `4px solid ${currentColor}`;
+        listItem.style.borderLeft = `4px solid ${event.color || '#4CAF50'}`;
         
         listItem.innerHTML = `
           <div class="event-header">
             <span class="event-time">${event.time}</span>
             <span class="event-title">${event.title}</span>
             <div class="status-control">
-              <select class="status-select" ${event.status === 'COMPLETED' ? 'disabled' : ''}>
-                <option value="IN_PROGRESS" ${event.status === 'IN_PROGRESS' ? 'selected' : ''}>In Progress</option>
+              <select class="status-select">
                 <option value="COMPLETED" ${event.status === 'COMPLETED' ? 'selected' : ''}>Completed</option>
                 <option value="CANCELLED" ${event.status === 'CANCELLED' ? 'selected' : ''}>Cancelled</option>
               </select>
-              <button class="update-status" title="Update Status" ${event.status === 'COMPLETED' ? 'disabled' : ''}>✓</button>
+              <button class="update-status" title="Update Status">✓</button>
             </div>
           </div>
-          <div class="event-description" style="background-color: ${event.status === 'COMPLETED' ? '#f0fff0' : '#f8f9fa'}">
+          <div class="event-description">
             <pre class="products-list">${event.description}</pre>
             <div class="totals">
               Total: KES ${event.totalAmount.toFixed(2)}
@@ -286,8 +273,8 @@ export const CalendarModule = {
             </div>
           </div>
           <div class="event-actions">
-            <button class="edit" ${event.status === 'COMPLETED' ? 'disabled' : ''}>Edit Payment</button>
-            <button class="delete" ${event.status === 'COMPLETED' ? 'disabled' : ''}>Delete</button>
+            <button class="edit">Edit Payment</button>
+            <button class="delete">Delete</button>
           </div>
         `;
 
@@ -314,33 +301,13 @@ export const CalendarModule = {
         updateStatusBtn.addEventListener('click', async () => {
           const newStatus = statusSelect.value;
           try {
-            const response = await fetch(`${orderBaseUrl}/${event.id}/status`, {
+            await fetch(`${orderBaseUrl}/${event.id}/status`, {
               method: 'PUT',
               headers: {
                 'Content-Type': 'application/json'
               },
               body: JSON.stringify({ newStatus })
             });
-
-            if (!response.ok) {
-              throw new Error('Failed to update status');
-            }
-
-            // Update the event status immediately
-            event.status = newStatus;
-            const newColor = getStatusColor(newStatus);
-            
-            // Update the event item border
-            listItem.style.borderLeft = `4px solid ${newColor}`;
-            
-            // Update the event indicator in the calendar
-            const indicator = this.config.elements.calendarDays
-              .querySelector(`[data-date="${dateString}"] .event-indicator`);
-            if (indicator) {
-              indicator.style.backgroundColor = newColor;
-            }
-
-            // Refresh all data
             await this.fetchAndRenderOrders();
           } catch (error) {
             console.error('Error updating status:', error);

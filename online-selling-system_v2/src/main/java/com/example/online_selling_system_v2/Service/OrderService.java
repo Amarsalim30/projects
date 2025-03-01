@@ -40,7 +40,7 @@ public class OrderService {
 
     @Transactional(readOnly = true)
     public Optional<List<Order>> getOrderByCustomerName(String customerName) {
-        return orderRepository.findByCustomer_Name(customerName);
+        return orderRepository.findByCustomerNameContainingIgnoreCase(customerName);
     }
 
     @Transactional(readOnly = true)
