@@ -31,6 +31,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.RequestParam;
 import java.util.Collections;
 import com.example.online_selling_system_v2.Config.OrderConstants;
 
@@ -129,17 +130,24 @@ public class OrderController {
         }
     }
 
-    @PutMapping("/{orderId}/status")
+    @PutMapping(value = {"/{orderId}/status", "/{orderId}/status/{newStatus}"})
     public ResponseEntity<?> updateOrderStatus(
             @PathVariable Long orderId,
-            @RequestBody String newStatus) {
+            @PathVariable(required = false) String newStatus,
+            @RequestParam(value = "newStatus", required = false) String newStatusParam) {
         try {
             if (orderId == null) {
                 return ResponseEntity.badRequest()
                     .body(Map.of("error", "Order ID is required"));
             }
 
-            String trimmedStatus = newStatus != null ? newStatus.trim() : "";
+            // Use path variable first, then query param
+            String statusToUpdate = newStatus != null ? newStatus : newStatusParam;
+            
+            // Clean up the status string
+            String trimmedStatus = statusToUpdate != null ? 
+                statusToUpdate.trim().replace("\"", "") : "";
+                
             if (!orderValidator.isValidOrderStatus(trimmedStatus)) {
                 String validStatuses = String.join(", ", OrderConstants.VALID_STATUSES);
                 return ResponseEntity.badRequest()
@@ -154,7 +162,31 @@ public class OrderController {
         } catch (Exception e) {
             logger.error("Error updating order status", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of("error", "Failed to update order status"));
+                .body(Map.of("error", "Failed to update order status: " + e.getMessage()));
+        }
+    }
+    @PutMapping("{orderId}/paid")
+    public ResponseEntity<?> updatePaidAmount(@PathVariable Long orderId, @RequestParam(name = "paidAmount") BigDecimal paidAmount) {
+        try {
+            if (orderId == null) {
+                return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Order ID is required"));
+            }
+            
+            if (paidAmount == null || paidAmount.compareTo(BigDecimal.ZERO) < 0) {
+                return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Paid amount must be a positive number"));
+            }
+            
+            OrderDTO updatedOrderDTO = orderService.updatePaidAmount(orderId, paidAmount);
+            return ResponseEntity.ok(updatedOrderDTO);
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            logger.error("Error updating paid amount", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Failed to update paid amount: " + e.getMessage()));
         }
     }
 }

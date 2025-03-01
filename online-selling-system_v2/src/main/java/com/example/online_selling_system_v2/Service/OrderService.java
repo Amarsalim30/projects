@@ -1,5 +1,6 @@
 package com.example.online_selling_system_v2.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -81,6 +82,27 @@ public class OrderService {
             throw new OrderValidationException("Invalid order status: " + newStatus);
         } catch (Exception e) {
             throw new RuntimeException("Failed to update order status: " + e.getMessage());
+        }
+    }
+    @Transactional
+    public OrderDTO updatePaidAmount(Long orderId, BigDecimal paidAmount) {
+        try {
+            return orderRepository.findById(orderId)
+                .map(order -> {
+                    if (paidAmount.compareTo(order.getTotalAmount()) > 0) {
+                        throw new OrderValidationException("Paid amount cannot exceed total amount");
+                    }
+                    order.setPaidAmount(paidAmount);
+                    order.updateTotals(); // This will update remaining amount and payment status
+                    Order updatedOrder = orderRepository.save(order);
+                    eventPublisher.publishEvent(new OrderEvent(updatedOrder, OrderEvent.EventType.PAYMENT_UPDATED));
+                    return orderMapper.toOrderDTO(updatedOrder);
+                })
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
+        } catch (OrderValidationException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to update paid amount: " + e.getMessage());
         }
     }
 }

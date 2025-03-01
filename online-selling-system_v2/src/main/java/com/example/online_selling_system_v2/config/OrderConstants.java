@@ -7,5 +7,5 @@ public final class OrderConstants {
     
     public static final int MAX_QUANTITY = 1000;
     public static final BigDecimal MAX_ITEM_TOTAL = BigDecimal.valueOf(1000000);
-    public static final String[] VALID_STATUSES = {"PENDING", "COMPLETED", "CANCELLED"};
+    public static final String[] VALID_STATUSES = {"PENDING","IN_PROGRESS", "COMPLETED","DELIVERED", "CANCELLED"};
 }
