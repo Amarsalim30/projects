@@ -146,4 +146,12 @@ public class Order {
             this.paymentStatus = PaymentStatus.UNPAID;
         }
     }
+
+    public Long getVersion() {
+        return version;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
+    }
 }

@@ -725,6 +725,11 @@ body.sidebar-open {
     border-radius: 5px;
     min-height: 80px;
     border: 1px solid #eee;
+    position: relative;
+}
+
+.calendar-day:hover .event-indicator {
+    transform: scale(1.2);
 }
 
 .calendar-day:hover {
@@ -751,8 +756,8 @@ body.sidebar-open {
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background-color: var(--success-color);
     margin: 4px auto;
+    transition: background-color 0.3s ease;
 }
 
 /* Event List Styles */

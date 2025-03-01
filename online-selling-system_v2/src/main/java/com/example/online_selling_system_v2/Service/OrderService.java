@@ -8,6 +8,7 @@ import java.util.Optional;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 
 import com.example.online_selling_system_v2.Event.OrderEvent;
 import com.example.online_selling_system_v2.Exception.OrderValidationException;
@@ -21,6 +22,7 @@ import com.example.online_selling_system_v2.Repository.OrderRepository;
 @Service
 @Transactional
 public class OrderService {
+    private static final int MAX_RETRIES = 3;
     private final OrderRepository orderRepository;
     private final ApplicationEventPublisher eventPublisher;
     private final OrderMapper orderMapper;
@@ -84,25 +86,47 @@ public class OrderService {
             throw new RuntimeException("Failed to update order status: " + e.getMessage());
         }
     }
+
     @Transactional
-    public OrderDTO updatePaidAmount(Long orderId, BigDecimal paidAmount) {
-        try {
-            return orderRepository.findById(orderId)
-                .map(order -> {
-                    if (paidAmount.compareTo(order.getTotalAmount()) > 0) {
-                        throw new OrderValidationException("Paid amount cannot exceed total amount");
-                    }
-                    order.setPaidAmount(paidAmount);
-                    order.updateTotals(); // This will update remaining amount and payment status
-                    Order updatedOrder = orderRepository.save(order);
-                    eventPublisher.publishEvent(new OrderEvent(updatedOrder, OrderEvent.EventType.PAYMENT_UPDATED));
-                    return orderMapper.toOrderDTO(updatedOrder);
-                })
-                .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
-        } catch (OrderValidationException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to update paid amount: " + e.getMessage());
+    public OrderDTO updatePaidAmount(Long orderId, BigDecimal additionalPayment) {
+        int attempts = 0;
+        while (attempts < MAX_RETRIES) {
+            try {
+                return orderRepository.findById(orderId)
+                    .map(order -> {
+                        // Calculate new total paid amount
+                        BigDecimal newPaidAmount = order.getPaidAmount().add(additionalPayment);
+                        
+                        // Validate the new total doesn't exceed order total
+                        if (newPaidAmount.compareTo(order.getTotalAmount()) > 0) {
+                            throw new OrderValidationException("Total paid amount cannot exceed order total amount");
+                        }
+                        
+                        order.setPaidAmount(newPaidAmount);
+                        order.updateTotals(); // This will update remaining amount and payment status
+                        Order updatedOrder = orderRepository.save(order);
+                        eventPublisher.publishEvent(new OrderEvent(updatedOrder, OrderEvent.EventType.PAYMENT_UPDATED));
+                        return orderMapper.toOrderDTO(updatedOrder);
+                    })
+                    .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
+            } catch (ObjectOptimisticLockingFailureException e) {
+                attempts++;
+                if (attempts == MAX_RETRIES) {
+                    throw new RuntimeException("Failed to update payment after " + MAX_RETRIES + " attempts");
+                }
+                // Small delay before retry
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    throw new RuntimeException("Payment update was interrupted");
+                }
+            } catch (OrderValidationException e) {
+                throw e;
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to update paid amount: " + e.getMessage());
+            }
         }
+        throw new RuntimeException("Failed to update payment due to concurrent modifications");
     }
 }

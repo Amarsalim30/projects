@@ -42,23 +42,20 @@ export const CalendarModule = {
             this.config.events[dateKey] = [];
           }
 
-          const productsDescription = order.orderItems ? 
-            order.orderItems.map(item => 
-              `${item.productName} × ${item.quantity} = KES ${(item.itemPrice * item.quantity).toFixed(2)}`
-            ).join('\n') : 
-            'No products';
-
+          // Ensure color is updated based on current status
+          const statusColor = getStatusColor(order.status);
+          
           this.config.events[dateKey].push({
             id: order.id,
             time: order.dateOfEvent.split('T')[1]?.substring(0, 5) || '00:00',
             title: `${order.customerName || 'No Customer'} - ${order.status || 'PENDING'}`,
             status: order.status,
             orderItems: order.orderItems || [],
-            description: productsDescription,
+            description: this.formatProductsDescription(order.orderItems),
             totalAmount: order.totalAmount || 0,
             paidAmount: order.paidAmount || 0,
             remainingAmount: order.remainingAmount || 0,
-            color: getStatusColor(order.status)
+            color: statusColor // Set the color explicitly
           });
         });
 
@@ -75,6 +72,15 @@ export const CalendarModule = {
     } finally {
       hideLoadingSpinner();
     }
+  },
+
+  // Add helper method for consistent product description formatting
+  formatProductsDescription(orderItems) {
+    return orderItems ? 
+      orderItems.map(item => 
+        `${item.productName} × ${item.quantity} = KES ${(item.itemPrice * item.quantity).toFixed(2)}`
+      ).join('\n') : 
+      'No products';
   },
 
   /**
@@ -215,9 +221,17 @@ export const CalendarModule = {
         dayElement.classList.add('selected');
       }
 
-      if (this.config.events[fullDate]) {
+      // Modified event indicator code
+      const events = this.config.events[fullDate] || [];
+      if (events.length > 0) {
         const eventIndicator = document.createElement('span');
         eventIndicator.classList.add('event-indicator');
+        
+        // Get latest event status
+        const latestEvent = events[events.length - 1];
+        const statusColor = getStatusColor(latestEvent.status);
+        eventIndicator.style.backgroundColor = statusColor;
+        
         dayElement.appendChild(eventIndicator);
       }
 
@@ -250,21 +264,24 @@ export const CalendarModule = {
       events.forEach(event => {
         const listItem = document.createElement('li');
         listItem.classList.add('event-item');
-        listItem.style.borderLeft = `4px solid ${event.color || '#4CAF50'}`;
+        // Always get fresh color based on current status
+        const currentColor = getStatusColor(event.status);
+        listItem.style.borderLeft = `4px solid ${currentColor}`;
         
         listItem.innerHTML = `
           <div class="event-header">
             <span class="event-time">${event.time}</span>
             <span class="event-title">${event.title}</span>
             <div class="status-control">
-              <select class="status-select">
+              <select class="status-select" ${event.status === 'COMPLETED' ? 'disabled' : ''}>
+                <option value="IN_PROGRESS" ${event.status === 'IN_PROGRESS' ? 'selected' : ''}>In Progress</option>
                 <option value="COMPLETED" ${event.status === 'COMPLETED' ? 'selected' : ''}>Completed</option>
                 <option value="CANCELLED" ${event.status === 'CANCELLED' ? 'selected' : ''}>Cancelled</option>
               </select>
-              <button class="update-status" title="Update Status">✓</button>
+              <button class="update-status" title="Update Status" ${event.status === 'COMPLETED' ? 'disabled' : ''}>✓</button>
             </div>
           </div>
-          <div class="event-description">
+          <div class="event-description" style="background-color: ${event.status === 'COMPLETED' ? '#f0fff0' : '#f8f9fa'}">
             <pre class="products-list">${event.description}</pre>
             <div class="totals">
               Total: KES ${event.totalAmount.toFixed(2)}
@@ -273,8 +290,8 @@ export const CalendarModule = {
             </div>
           </div>
           <div class="event-actions">
-            <button class="edit">Edit Payment</button>
-            <button class="delete">Delete</button>
+            <button class="edit" ${event.status === 'COMPLETED' ? 'disabled' : ''}>Edit Payment</button>
+            <button class="delete" ${event.status === 'COMPLETED' ? 'disabled' : ''}>Delete</button>
           </div>
         `;
 
@@ -301,13 +318,33 @@ export const CalendarModule = {
         updateStatusBtn.addEventListener('click', async () => {
           const newStatus = statusSelect.value;
           try {
-            await fetch(`${orderBaseUrl}/${event.id}/status`, {
+            const response = await fetch(`${orderBaseUrl}/${event.id}/status`, {
               method: 'PUT',
               headers: {
                 'Content-Type': 'application/json'
               },
               body: JSON.stringify({ newStatus })
             });
+
+            if (!response.ok) {
+              throw new Error('Failed to update status');
+            }
+
+            // Update the event status immediately
+            event.status = newStatus;
+            const newColor = getStatusColor(newStatus);
+            
+            // Update the event item border
+            listItem.style.borderLeft = `4px solid ${newColor}`;
+            
+            // Update the event indicator in the calendar
+            const indicator = this.config.elements.calendarDays
+              .querySelector(`[data-date="${dateString}"] .event-indicator`);
+            if (indicator) {
+              indicator.style.backgroundColor = newColor;
+            }
+
+            // Refresh all data
             await this.fetchAndRenderOrders();
           } catch (error) {
             console.error('Error updating status:', error);
@@ -344,23 +381,32 @@ export const CalendarModule = {
         e.preventDefault();
         const amount = parseFloat(paymentInput.value);
         
-        if (isNaN(amount) || amount < 0 || amount > event.remainingAmount) {
-            alert(`Please enter an amount between 0 and ${event.remainingAmount}`);
+        if (isNaN(amount) || amount <= 0) {
+            alert('Please enter a valid payment amount greater than zero');
             return;
         }
 
-        try {
-            const submitButton = paymentForm.querySelector('button[type="submit"]');
-            submitButton.disabled = true;
-            submitButton.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Updating...';
+        // Only check against remaining amount
+        if (amount > event.remainingAmount) {
+            alert(`Payment amount cannot exceed remaining balance: ${event.remainingAmount}`);
+            return;
+        }
 
+        const submitButton = paymentForm.querySelector('button[type="submit"]');
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Updating...';
+
+        try {
             await this.updatePaidAmount(event.id, amount);
             await this.fetchAndRenderOrders();
             modal.style.display = 'none';
         } catch (error) {
-            alert('Failed to update payment: ' + error.message);
+            alert(error.message);
+            if (error.message.includes('concurrent modification')) {
+                // Refresh data and keep modal open
+                await this.fetchAndRenderOrders();
+            }
         } finally {
-            const submitButton = paymentForm.querySelector('button[type="submit"]');
             submitButton.disabled = false;
             submitButton.innerHTML = 'Update Payment';
         }
@@ -384,31 +430,30 @@ export const CalendarModule = {
 
   async updatePaidAmount(orderId, amount) {
     try {
-        // Convert amount to number and validate
         const paymentAmount = parseFloat(amount);
-        if (isNaN(paymentAmount) || paymentAmount < 0) {
-            throw new Error('Invalid payment amount');
+        if (isNaN(paymentAmount) || paymentAmount <= 0) {
+            throw new Error('Payment amount must be greater than zero');
         }
 
-        const response = await fetch(`${orderBaseUrl}/${orderId}/paid`, {
+        const response = await fetch(`${orderBaseUrl}/${orderId}/paid?paidAmount=${paymentAmount.toFixed(2)}`, {
             method: 'PUT',
             headers: {
-                'Content-Type': 'application/json',
                 'Accept': 'application/json'
-            },
-            body: JSON.stringify({ paidAmount: paymentAmount })
+            }
         });
 
         if (!response.ok) {
             const errorData = await response.json();
+            if (response.status === 500 && errorData.error?.includes('was updated or deleted by another transaction')) {
+                throw new Error('Payment update failed due to concurrent modification. Please try again.');
+            }
             throw new Error(errorData.error || 'Failed to update payment');
         }
 
-        const updatedOrder = await response.json();
-        return updatedOrder;
+        return await response.json();
     } catch (error) {
         console.error('Payment update error:', error);
-        throw new Error(`Payment update failed: ${error.message}`);
+        throw new Error(error.message || 'Failed to update payment. Please try again.');
     }
   },
 

@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.online_selling_system_v2.DTO.OrderDTO;
 import com.example.online_selling_system_v2.DTO.OrderItemDTO;
+import com.example.online_selling_system_v2.Exception.OrderValidationException;
 import com.example.online_selling_system_v2.Exception.ResourceNotFoundException;
 import com.example.online_selling_system_v2.Mapper.OrderMapper;
 import com.example.online_selling_system_v2.Model.Order.OrderStatus;
@@ -130,18 +131,19 @@ public class OrderController {
         }
     }
 
-    @PutMapping(value = {"/{orderId}/status", "/{orderId}/status/{newStatus}"})
+    @PutMapping("/{orderId}/status")
     public ResponseEntity<?> updateOrderStatus(
             @PathVariable Long orderId,
-            @PathVariable(required = false) String newStatus,
-            @RequestParam(value = "newStatus", required = false) String newStatusParam) {
+            @RequestBody Map<String, String> statusUpdate) {
         try {
-            // Remove redundant null check since @PathVariable ensures non-null
-            String statusToUpdate = newStatus != null ? newStatus : newStatusParam;
+            String newStatus = statusUpdate.get("newStatus");
+            if (newStatus == null || newStatus.trim().isEmpty()) {
+                return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Status cannot be empty"));
+            }
             
             // Clean up the status string
-            String trimmedStatus = statusToUpdate != null ? 
-                statusToUpdate.trim().replace("\"", "") : "";
+            String trimmedStatus = newStatus.trim().toUpperCase();
                 
             if (!orderValidator.isValidOrderStatus(trimmedStatus)) {
                 String validStatuses = String.join(", ", OrderConstants.VALID_STATUSES);
@@ -164,18 +166,20 @@ public class OrderController {
     @PutMapping("{orderId}/paid")
     public ResponseEntity<?> updatePaidAmount(
             @PathVariable Long orderId,
-            @RequestParam(name = "paidAmount") BigDecimal paidAmount) {
+            @RequestParam(name = "paidAmount") BigDecimal additionalPayment) {
         try {
-            // Remove redundant null check since @PathVariable ensures non-null
-            if (paidAmount == null || paidAmount.compareTo(BigDecimal.ZERO) < 0) {
+            if (additionalPayment == null || additionalPayment.compareTo(BigDecimal.ZERO) <= 0) {
                 return ResponseEntity.badRequest()
-                    .body(Map.of("error", "Paid amount must be a positive number"));
+                    .body(Map.of("error", "Payment amount must be greater than zero"));
             }
             
-            OrderDTO updatedOrderDTO = orderService.updatePaidAmount(orderId, paidAmount);
+            OrderDTO updatedOrderDTO = orderService.updatePaidAmount(orderId, additionalPayment);
             return ResponseEntity.ok(updatedOrderDTO);
         } catch (ResourceNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of("error", e.getMessage()));
+        } catch (OrderValidationException e) {
+            return ResponseEntity.badRequest()
                 .body(Map.of("error", e.getMessage()));
         } catch (Exception e) {
             logger.error("Error updating paid amount", e);
