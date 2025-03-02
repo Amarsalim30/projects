@@ -19,5 +19,12 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     Optional<List<Order>> findByCustomer_Name(String customerName);
     Optional<List<Order>> findByDate(LocalDate date);
     // Optional<Order> findById(Long id);
-    
+
+    @Query("""
+        SELECT o FROM Order o 
+        WHERE o.customer.phoneNumber = :customerNumber 
+        AND o.remainingAmount > 0 
+        ORDER BY o.date DESC
+    """)
+    List<Order> findUnmatchedOrdersByCustomerNumber(@Param("customerNumber") String customerNumber);
 }

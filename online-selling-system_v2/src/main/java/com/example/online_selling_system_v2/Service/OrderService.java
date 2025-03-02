@@ -52,6 +52,11 @@ public class OrderService {
         return orderRepository.findById(id);
     }
 
+    @Transactional(readOnly = true)
+    public List<Order> findUnmatchedOrdersByCustomerNumber(String customerNumber) {
+        return orderRepository.findUnmatchedOrdersByCustomerNumber(customerNumber);
+    }
+
     @Transactional
     public OrderDTO addOrder(OrderDTO orderDTO) {
         try {
