@@ -3,6 +3,7 @@ import { productBaseUrl } from "../../modules/apiConstants.js";
 import { deleteProduct, fetchAndRenderProducts } from "./products.js";
 import { productListBody } from "../../modules/domCaching.js";
 import fetchController from "../../modules/fetchController.js";
+import { showNotification } from '../../modules/utility.js';
 
 export const initializeProductFormListener = () => {
     const form = document.getElementById("add-product-form");
@@ -33,20 +34,24 @@ export const initializeProductFormListener = () => {
         form.querySelector('button[type="submit"]').disabled = true;
 
         try {
-            const response = await fetchController.fetch('addProduct', `${productBaseUrl}/new`, {
+            const response = await fetchController.fetch('createProduct', `${productBaseUrl}/new`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: { 
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                },
                 body: JSON.stringify(newProduct),
             });
 
-            if (!response) throw new Error("Failed to add product");
-
-            event.target.reset();
-            hideSidebars();
-            await fetchAndRenderProducts();
+            if (response) {
+                form.reset();
+                hideSidebars();
+                await fetchAndRenderProducts();
+                showNotification('Product created successfully!', 'success');
+            }
         } catch (error) {
-            console.error("Add product error:", error);
-            alert("Error adding product: " + error.message);
+            console.error("Create product error:", error);
+            showNotification(`Failed to create product: ${error.message}`, 'error');
         } finally {
             form.querySelector('button[type="submit"]').disabled = false;
         }

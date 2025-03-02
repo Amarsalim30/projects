@@ -3,6 +3,7 @@ import { customerListBody } from "../../modules/domCaching.js";
 import { hideSidebars } from "../../modules/navigation.js";
 import fetchController from "../../modules/fetchController.js";
 import { PHONE_CONFIG } from './phone-input.js';
+import { showNotification } from '../../modules/utility.js';
 
 /* --------------- Customer Section ----------------- */
 
@@ -37,12 +38,6 @@ async function createCustomer(event) {
       return;
     }
 
-        // User input: "712345678"
-    // const cleanedNumber = PHONE_CONFIG.cleanNumber(phoneInput.value);
-        // cleanedNumber = "712345678"
-    // const fullNumber = `+254${cleanedNumber}`;
-        // fullNumber = "+254712345678"
-        
     // Validate and clean phone number
     const cleanedNumber = PHONE_CONFIG.cleanNumber(phoneInput.value);
     const fullNumber = `+254${cleanedNumber}`; // Don't add space after country code
@@ -62,7 +57,8 @@ async function createCustomer(event) {
       if (exists) {
         phoneInput.setCustomValidity('This phone number is already registered');
         phoneInput.reportValidity();
-        return alert("This phone number is already registered");
+        showNotification('This phone number is already registered', 'error');
+        return;
       }
 
       const response = await fetchController.fetch('createCustomer', `${customerBaseUrl}/new`, {
@@ -81,10 +77,11 @@ async function createCustomer(event) {
         form.reset();
         hideSidebars();
         await fetchCustomers();
+        showNotification('Customer created successfully!', 'success');
       }
     } catch (error) {
       console.error("Create customer error:", error);
-      alert(`Failed to create customer: ${error.message}`);
+      showNotification(`Failed to create customer: ${error.message}`, 'error');
     }
 }
 
@@ -96,7 +93,7 @@ async function fetchCustomers(url = customerBaseUrl) {
     }
   } catch (error) {
     console.error("Fetch customers error:", error);
-    alert("Error fetching customers: " + error.message);
+    showNotification(`Error fetching customers: ${error.message}`, 'error');
   }
 }
 
@@ -130,6 +127,7 @@ async function deleteCustomer(customerId) {
 
     if (deleted) {
       await fetchCustomers();
+      showNotification('Customer deleted successfully!', 'success');
     }
   } catch (error) {
     console.error(`Error deleting customer ${customerId}:`, error);
@@ -146,7 +144,7 @@ async function deleteCustomer(customerId) {
         ? errorMessages['foreign key constraint']
         : errorMessages['default'];
 
-    alert(message);
+    showNotification(message, 'error');
     
     if (error.status === 404) {
       await fetchCustomers();

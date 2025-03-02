@@ -4,7 +4,7 @@ const ValidationRules = {
             const customerId = parseInt(value);
             return !isNaN(customerId) && customerId > 0;
         },
-        message: 'Customer selection is required',
+        message: 'Please select a valid customer from the list',  // More specific message
         selector: '#select-customer'
     },
     date: {
@@ -13,7 +13,7 @@ const ValidationRules = {
             const selectedDate = new Date(value);
             const today = new Date();
             today.setHours(0, 0, 0, 0);
-            return selectedDate >= today;
+            return selectedDate instanceof Date && !isNaN(selectedDate) && selectedDate >= today;
         },
         message: 'Please select a valid future date',
         selector: '#date-of-event'
@@ -35,7 +35,10 @@ function validateProductEntry(entry) {
 
 export function validateOrderForm() {
     const form = document.getElementById('add-order-form');
-    if (!form) return { isValid: false, errors: ['Form not found'] };
+    if (!form) return { 
+        isValid: false, 
+        errors: ['Order form not found. Please refresh the page.']  // More helpful message
+    };
 
     const errors = new Set();
     let hasValidProduct = false;

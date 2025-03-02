@@ -8,7 +8,7 @@ import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Max;
 import org.hibernate.annotations.Check;
 
-import com.example.online_selling_system_v2.config.OrderConstants;
+import com.example.online_selling_system_v2.Config.OrderConstants;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;

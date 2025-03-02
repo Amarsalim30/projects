@@ -2,7 +2,6 @@ package com.example.online_selling_system_v2.Mapper;
 
 import com.example.online_selling_system_v2.DTO.OrderItemDTO;
 import com.example.online_selling_system_v2.Model.Product;
-import com.example.online_selling_system_v2.Model.Order.Order;
 import com.example.online_selling_system_v2.Model.Order.OrderItem;
 import com.example.online_selling_system_v2.Service.ProductService;
 import org.springframework.stereotype.Component;

@@ -18,17 +18,25 @@ export function initializeAddProductToOrder() {
 export function createProductEntry() {
     const productDiv = document.createElement("div");
     productDiv.classList.add("product-entry");
-    productDiv.innerHTML = `
+    
+    // Add data validation attributes
+    const html = `
         <div class="form-group">
             <label for="product-select">Product *</label>
-            <select class="product-select" required>
+            <select class="product-select" required data-error="Please select a product">
                 <option value="">Search for a product</option>
             </select>
         </div>
         <div class="form-row">
             <div class="form-group">
                 <label for="product-quantity">Quantity *</label>
-                <input type="number" class="product-quantity" min="1" placeholder="1" required>
+                <input type="number" 
+                       class="product-quantity" 
+                       min="1" 
+                       max="1000"
+                       placeholder="1" 
+                       required 
+                       data-error="Quantity must be between 1 and 1000">
             </div>
             <div class="form-group">
                 <label for="product-price">Unit Price (KES)</label>
@@ -43,6 +51,7 @@ export function createProductEntry() {
             <i class="fa fa-times"></i>
         </button>
     `;
+    productDiv.innerHTML = html;
 
     // Add fade-in animation
     productDiv.style.opacity = '0';

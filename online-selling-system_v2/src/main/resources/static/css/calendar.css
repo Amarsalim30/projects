@@ -1,0 +1,90 @@
+.products-list {
+    margin: 8px 0;
+    white-space: pre-wrap;
+    font-family: inherit;
+    background: none;
+    border: none;
+    padding: 4px 8px;
+    background-color: rgba(0,0,0,0.02);
+    border-radius: 4px;
+}
+
+.totals {
+    margin-top: 8px;
+    border-top: 1px solid #eee;
+    padding-top: 8px;
+    font-weight: 500;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 500px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.payment-details {
+    margin: 20px 0;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+}
+
+.payment-details p {
+    margin: 8px 0;
+    display: flex;
+    justify-content: space-between;
+}
+
+.close {
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close:hover {
+    color: #666;
+}
+
+#payment-form .form-group {
+    margin: 20px 0;
+}
+
+#payment-form input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+#payment-form button {
+    width: 100%;
+    padding: 10px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+#payment-form button:hover {
+    background-color: #45a049;
+}

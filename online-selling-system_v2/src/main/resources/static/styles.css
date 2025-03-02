@@ -725,6 +725,11 @@ body.sidebar-open {
     border-radius: 5px;
     min-height: 80px;
     border: 1px solid #eee;
+    position: relative;
+}
+
+.calendar-day:hover .event-indicator {
+    transform: scale(1.2);
 }
 
 .calendar-day:hover {
@@ -751,8 +756,9 @@ body.sidebar-open {
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background-color: var(--success-color);
     margin: 4px auto;
+    transition: all 0.3s ease;
+    background-color: #95a5a6; /* Default color */
 }
 
 /* Event List Styles */
@@ -1333,4 +1339,236 @@ button[type="submit"]:disabled {
 .error-message.fade-out {
     opacity: 0;
     transition: opacity 0.5s ease-out;
+}
+
+/* Event List Styles */
+.event-list {
+    padding: 20px;
+    background: white;
+    border-radius: 8px;
+    margin-top: 20px;
+}
+
+.event-list h3 {
+    font-size: 1.4em;
+    margin-bottom: 12px;
+    color: #444;
+}
+
+.event-list ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.event-list li {
+    padding: 10px 15px;
+    background-color: #f2f2f2;
+    border-radius: 5px;
+    margin-bottom: 8px;
+    border: 1px solid #ddd;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.event-time {
+    font-size: 0.9em;
+    color: #777;
+    margin-right: 15px;
+}
+
+.event-title {
+    flex-grow: 1;
+}
+
+.event-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.event-actions button {
+    padding: 6px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85em;
+    transition: background-color 0.2s ease;
+    border: none;
+    color: white;
+}
+
+.event-actions .edit {
+    background-color: var(--secondary-color);
+}
+
+.event-actions .delete {
+    background-color: var(--danger-color);
+}
+
+@media (max-width: 768px) {
+    .calendar-container {
+        width: 100%;
+        margin: 0;
+        border-radius: 0;
+    }
+
+    .calendar-day {
+        min-height: 60px;
+        font-size: 0.9em;
+    }
+
+    .event-list {
+        margin-top: 10px;
+        border-radius: 0;
+    }
+}
+
+.event-item {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+    background-color: #fff;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border-left: 4px solid #4CAF50;
+}
+
+.event-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.event-time {
+    background: #f0f0f0;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    color: #666;
+    white-space: nowrap;
+}
+
+.event-title {
+    font-weight: 500;
+    color: #333;
+    flex-grow: 1;
+}
+
+.description-content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    font-size: 0.95em;
+}
+
+.description-content div {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.description-content i {
+    width: 16px;
+    color: #666;
+}
+
+.event-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.event-actions button {
+    flex: 1;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+/* Mobile Optimizations */
+@media (max-width: 768px) {
+    .event-list {
+        padding: 12px;
+    }
+
+    .event-item {
+        padding: 10px;
+        margin-bottom: 8px;
+    }
+
+    .event-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+
+    .event-time {
+        font-size: 0.85em;
+    }
+
+    .description-content {
+        padding: 6px;
+        font-size: 0.9em;
+    }
+
+    .description-content div {
+        padding: 4px 0;
+        border-bottom: 1px solid #eee;
+    }
+
+    .description-content div:last-child {
+        border-bottom: none;
+    }
+
+    .event-actions {
+        position: relative;
+        padding-top: 8px;
+        margin-top: 8px;
+        border-top: 1px solid #eee;
+    }
+
+    .event-actions button {
+        padding: 10px;
+        font-size: 0.85em;
+    }
+
+    .no-products {
+        color: #999;
+        font-style: italic;
+    }
+}
+
+.status-control {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.status-select {
+  padding: 2px 5px;
+  border-radius: 3px;
+}
+
+.update-status {
+  padding: 2px 6px;
+  border: none;
+  border-radius: 3px;
+  background: #4CAF50;
+  color: white;
+  cursor: pointer;
+}
+
+.update-status:hover {
+  background: #45a049;
 }

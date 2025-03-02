@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.example.online_selling_system_v2.DTO.OrderDTO;
 import com.example.online_selling_system_v2.DTO.OrderItemDTO;
+import com.example.online_selling_system_v2.Exception.OrderValidationException;
 import com.example.online_selling_system_v2.Exception.ResourceNotFoundException;
 import com.example.online_selling_system_v2.Mapper.OrderMapper;
 import com.example.online_selling_system_v2.Model.Order.OrderStatus;
@@ -15,10 +16,13 @@ import com.example.online_selling_system_v2.Validator.ValidationResult;
 import jakarta.validation.Valid;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Map;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,8 +35,9 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.RequestParam;
 import java.util.Collections;
-import com.example.online_selling_system_v2.config.OrderConstants;
+import com.example.online_selling_system_v2.Config.OrderConstants;
 
 @RestController
 @RequestMapping(value = "/api/orders", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -103,7 +108,7 @@ public class OrderController {
             }
             
             // Set initial status
-            orderDTO.setStatus(OrderStatus.PENDING);
+            orderDTO.setStatus(OrderStatus.IN_PROGRESS);
             orderDTO.setProductionStatus(OrderStatus.PENDING);
             orderDTO.setPaymentStatus(PaymentStatus.UNPAID);
             orderDTO.setPaidAmount(BigDecimal.ZERO);
@@ -132,14 +137,17 @@ public class OrderController {
     @PutMapping("/{orderId}/status")
     public ResponseEntity<?> updateOrderStatus(
             @PathVariable Long orderId,
-            @RequestBody String newStatus) {
+            @RequestBody Map<String, String> statusUpdate) {
         try {
-            if (orderId == null) {
+            String newStatus = statusUpdate.get("newStatus");
+            if (newStatus == null || newStatus.trim().isEmpty()) {
                 return ResponseEntity.badRequest()
-                    .body(Map.of("error", "Order ID is required"));
+                    .body(Map.of("error", "Status cannot be empty"));
             }
-
-            String trimmedStatus = newStatus != null ? newStatus.trim() : "";
+            
+            // Clean up the status string
+            String trimmedStatus = newStatus.trim().toUpperCase();
+                
             if (!orderValidator.isValidOrderStatus(trimmedStatus)) {
                 String validStatuses = String.join(", ", OrderConstants.VALID_STATUSES);
                 return ResponseEntity.badRequest()
@@ -154,7 +162,67 @@ public class OrderController {
         } catch (Exception e) {
             logger.error("Error updating order status", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of("error", "Failed to update order status"));
+                .body(Map.of("error", "Failed to update order status: " + e.getMessage()));
+        }
+    }
+
+    @PutMapping("{orderId}/paid")
+    public ResponseEntity<?> updatePaidAmount(
+            @PathVariable Long orderId,
+            @RequestParam(name = "paidAmount") BigDecimal additionalPayment) {
+        try {
+            if (additionalPayment == null || additionalPayment.compareTo(BigDecimal.ZERO) <= 0) {
+                return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Payment amount must be greater than zero"));
+            }
+            
+            OrderDTO updatedOrderDTO = orderService.updatePaidAmount(orderId, additionalPayment);
+            return ResponseEntity.ok(updatedOrderDTO);
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of("error", e.getMessage()));
+        } catch (OrderValidationException e) {
+            return ResponseEntity.badRequest()
+                .body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            logger.error("Error updating paid amount", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Failed to update paid amount: " + e.getMessage()));
+        }
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<OrderDTO>> searchOrders(
+            @RequestParam(required = false) String customerName,
+            @RequestParam(required = false) String date) {
+        try {
+            List<OrderDTO> orders;
+
+            if (customerName != null && !customerName.isBlank()) {
+                // Using case-insensitive search
+                orders = orderService.getOrderByCustomerName(customerName.trim())
+                    .orElse(Collections.emptyList())
+                    .stream()
+                    .map(orderMapper::toOrderDTO)
+                    .collect(Collectors.toList());
+            } else if (date != null && !date.isBlank()) {
+                LocalDate searchDate = LocalDate.parse(date.trim());
+                orders = orderService.getOrderByDate(searchDate)
+                    .orElse(Collections.emptyList())
+                    .stream()
+                    .map(orderMapper::toOrderDTO)
+                    .collect(Collectors.toList());
+            } else {
+                orders = orderMapper.toOrderDTOList(orderService.getAllOrders());
+            }
+
+            return ResponseEntity.ok(orders);
+        } catch (DateTimeParseException e) {
+            logger.error("Invalid date format: {}", date, e);
+            throw new IllegalArgumentException("Invalid date format. Please use YYYY-MM-DD");
+        } catch (Exception e) {
+            logger.error("Error searching orders", e);
+            throw new RuntimeException("Failed to search orders");
         }
     }
 }
