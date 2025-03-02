@@ -18,7 +18,6 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     Optional<List<Order>> findByCustomer_Name(String customerName);
     Optional<List<Order>> findByDate(LocalDate date);
-    // Optional<Order> findById(Long id);
 
     @Query("""
         SELECT o FROM Order o 

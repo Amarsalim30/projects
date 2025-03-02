@@ -12,7 +12,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/sms")
@@ -122,6 +121,7 @@ public class SmsTransactionController {
             return message; 
         }
         
+        @SuppressWarnings("unused")
         public void setMessage(String message) { 
             this.message = message; 
         }

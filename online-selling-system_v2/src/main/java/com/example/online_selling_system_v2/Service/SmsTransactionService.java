@@ -112,8 +112,10 @@ public class SmsTransactionService {
             logger.debug("Found {} unmatched orders for customer: {}", 
                         unmatchedOrders.size(), transaction.getCustomerNumber());
 
+            //phase 1:the transaction can be processed as
+            // a full (or partial) payment without exceeding the remaining balance.
             for (Order order : unmatchedOrders) {
-                if (order.getRemainingAmount().compareTo(transaction.getAmount()) == 0) {
+                if (order.getRemainingAmount().compareTo(transaction.getAmount()) >= 0) {
                     transaction.setOrder(order);
                     transaction.setStatus(TransactionStatus.MATCHED);
                     orderService.updatePaidAmount(order.getId(), transaction.getAmount());
