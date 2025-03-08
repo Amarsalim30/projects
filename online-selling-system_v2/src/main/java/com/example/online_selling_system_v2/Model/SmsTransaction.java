@@ -46,6 +46,7 @@ public class SmsTransaction {
     public enum TransactionStatus {
         PENDING,
         MATCHED,
+        PARTIALLY_MATCHED,
         UNMATCHED
     }
 }
