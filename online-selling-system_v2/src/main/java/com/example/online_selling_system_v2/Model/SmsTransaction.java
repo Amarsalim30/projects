@@ -20,7 +20,7 @@ public class SmsTransaction {
 
     @Column(nullable = false)
     private BigDecimal amount;
-
+    
     @Column(name = "customer_name", nullable = false)
     private String customerName;
 
