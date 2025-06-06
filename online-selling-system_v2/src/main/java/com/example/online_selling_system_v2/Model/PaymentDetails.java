@@ -1,5 +1,7 @@
 package com.example.online_selling_system_v2.Model;
 
+import java.time.LocalDateTime;
+
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -23,6 +25,9 @@ public class PaymentDetails {
     @Column(name = "mpesa_name")
     private String mpesaName;
 
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt;
+
     @ManyToOne
     @JoinColumn(name = "customer_id", nullable = false)
     private Customer customer;
@@ -31,6 +36,8 @@ public class PaymentDetails {
     public PaymentDetails(String paymentNumber, Customer customer) {
         this.paymentNumber = paymentNumber;
         this.customer = customer;
+        this.createdAt = LocalDateTime.now();
+
     }
 
     // Method to update mpesaName from SMS transaction

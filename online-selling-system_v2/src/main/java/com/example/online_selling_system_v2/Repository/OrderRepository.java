@@ -21,7 +21,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     @Query("""
         SELECT o FROM Order o 
-        WHERE o.customer.phoneNumber = :customerNumber 
+        WHERE o.customer.number = :customerNumber 
         AND o.remainingAmount > 0 
         ORDER BY o.date DESC
     """)
