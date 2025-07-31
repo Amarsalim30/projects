@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: springboot-app
+    env: java
+    buildCommand: ./mvnw clean package
+    startCommand: java -jar target/online-selling-system_v2-0.0.1-SNAPSHOT.jar
+    rootDir: online-selling-system_v2
